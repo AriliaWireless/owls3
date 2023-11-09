@@ -35,6 +35,11 @@ namespace OpenWifi {
 		Daemon()->PostInitialization(self);
 		OWLSNotifications::Register();
 	}
+
+	bool Daemon::Master() const {
+		return config().getBool("simulator.master", true);
+	}
+
 } // namespace OpenWifi
 
 int main(int argc, char **argv) {

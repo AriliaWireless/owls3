@@ -31,6 +31,7 @@ namespace OpenWifi {
 		void PostInitialization(Poco::Util::Application &self);
 		static Daemon *instance();
 		inline OWLSDashboard &GetDashboard() { return DB_; }
+		bool Master() const;
 
 	  private:
 		static Daemon *instance_;
