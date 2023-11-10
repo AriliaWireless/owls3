@@ -1,8 +1,9 @@
 openapi: 3.0.1
+
 info:
   title: OpenWifi Load Simulator
   description: An application to test load on an OpenWifi system.
-  version: 2.10.0
+  version: 3.0.0
   license:
     name: BSD3
     url: https://github.com/Telecominfraproject/wlan-cloud-ucentralgw/blob/master/LICENSE
@@ -424,6 +425,35 @@ components:
             $ref: '#/components/schemas/SimulationStatus'
 
 paths:
+  /owlsSystemConfiguration:
+    get:
+      tags:
+        - System
+      operationId: getOwlsSystemConfiguration
+      responses:
+        200:
+          description: System configuration
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  master:
+                    type: boolean
+                  publicURI:
+                    type: string
+                  privateURI:
+                    type: string
+                  version:
+                    type: string
+                  simulations:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SimulationStatus'
+
+        403:
+          $ref: '#/components/responses/Unauthorized'
+
   /simulation/{id}:
     get:
       tags:

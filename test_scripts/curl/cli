@@ -208,6 +208,14 @@ liststatuses() {
     jq < ${result_file}
 }
 
+owlssystemconfig() {
+    testargcount 0 $#
+    curl    ${FLAGS} -X GET "https://${OWLS}/api/v1/owlsSystemConfiguration" \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer ${token}" > ${result_file}
+    jq < ${result_file}
+}
+
 results() {
     testargcount 1 $#
     curl    ${FLAGS} -X GET "https://${OWLS}/api/v1/results/$1" \
@@ -240,6 +248,8 @@ help() {
   echo "              Get stats on a running simulation"
   echo "    results <simulation-id>"
   echo "              Get stats on a running simulation"
+  echo "    owlssystemconfig"
+  echo "              Get the OWLS system configuration. Useful in multi-OWLS systems"
 }
 
 shopt -s nocasematch
@@ -256,6 +266,7 @@ case "$1" in
     "stopsim") login; stopsim "$2" "$3"; logout;;
     "cancelsim") login; cancelsim "$2" "$3"; logout;;
     "getsimstats") login; getsimstats "$2"; logout;;
+    "owlssystemconfig") login; owlssystemconfig ; logout;;
     "results") login; results "$2"; logout;;
     *) help ;;
 esac
