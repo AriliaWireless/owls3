@@ -18,9 +18,9 @@ namespace OpenWifi {
     struct SimulationRecord {
         SimulationRecord(const OWLSObjects::SimulationDetails & details,Poco::Logger &L, const std::string &id,
 						 const SecurityObjects::UserInfo &uinfo, const std::string &MasterURI,
-						 const std::string &AccessKey, std::uint64_t Offset, std::uint64_t Limit):
+						 const std::string &AccessKey, std::uint64_t Offset, std::uint64_t Limit, std::uint64_t Index):
                 Details(details),
-                Runner(details, L, id, uinfo, MasterURI, AccessKey, Offset, Limit),
+                Runner(details, L, id, uinfo, MasterURI, AccessKey, Offset, Limit, Index),
                 UInfo(uinfo){
 
         }
@@ -43,8 +43,12 @@ namespace OpenWifi {
 		void Stop() final;
 		void run() final;
 
-		bool StartSim(std::string &RunningId, const std::string &SimId, RESTAPI::Errors::msg &Error, const SecurityObjects::UserInfo &UInfo);
-		bool StartSim(const std::string &RunningId, const std::string &SimId, RESTAPI::Errors::msg &Error, const SecurityObjects::UserInfo &UInfo, const std::string &MasterURI, const std::string &AccessKey, std::uint64_t Offset, std::uint64_t Limit);
+		bool StartSim(std::string &RunningId, const std::string &SimId, RESTAPI::Errors::msg &Error,
+					  const SecurityObjects::UserInfo &UInfo);
+		bool StartSim(const std::string &RunningId, const std::string &SimId, RESTAPI::Errors::msg &Error,
+					  const SecurityObjects::UserInfo &UInfo, const std::string &MasterURI,
+					  const std::string &AccessKey, std::uint64_t Offset, std::uint64_t Limit,
+					  std::uint64_t Index);
 
 		bool StopSim(const std::string &Id, RESTAPI::Errors::msg &Error, const SecurityObjects::UserInfo &UInfo);
 		bool CancelSim(const std::string &Id, RESTAPI::Errors::msg &Error, const SecurityObjects::UserInfo &UInfo);

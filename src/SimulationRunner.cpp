@@ -87,7 +87,7 @@ namespace OpenWifi {
 
 	static bool StartRemoteSimulation(const Types::MicroServiceMeta &Service,
 							   const std::string &RunningId, const std::string &SimulationId,
-							   std::uint64_t Offset, std::uint64_t Limit) {
+							   std::uint64_t Offset, std::uint64_t Limit, std::uint64_t Index ) {
 
 		Poco::JSON::Object::Ptr ResponseObject;
 		auto Result = PostAPI(Service,
@@ -113,6 +113,7 @@ namespace OpenWifi {
 		OWLSObjects::SimulationStatus S;
 		SimStats()->GetCurrent(RunningId_, S, UInfo_);
 		std::uint64_t 	TimeOut=60000;
+		std::cout << "UpdateMasterSimulation:" 	<< Index_ << std::endl;
 		try {
 			Poco::URI URI(MasterURI_);
 			Poco::JSON::Object::Ptr ResponseObject;
@@ -148,7 +149,7 @@ namespace OpenWifi {
 					Poco::JSON::Parser P;
 					ResponseObject = P.parse(is).extract<Poco::JSON::Object::Ptr>();
 				}
-				return Response.getStatus();
+				return Response.getStatus()==Poco::Net::HTTPServerResponse::HTTP_OK;
 			} else {
 				Poco::Net::HTTPClientSession Session(URI.getHost(), URI.getPort());
 				Session.setTimeout(Poco::Timespan(TimeOut / 1000, TimeOut % 1000));
@@ -163,7 +164,7 @@ namespace OpenWifi {
 					Poco::JSON::Parser P;
 					ResponseObject = P.parse(is).extract<Poco::JSON::Object::Ptr>();
 				}
-				return Response.getStatus();
+				return Response.getStatus()==Poco::Net::HTTPServerResponse::HTTP_OK;
 			}
 		} catch (const Poco::Exception &E) {
 			Poco::Logger::get("REST-CALLER-POST").log(E);
@@ -205,10 +206,12 @@ namespace OpenWifi {
 				Clients_[Buffer] = Client;
 			}
 
+			std::uint64_t Index=1;
 			for(const auto & Service: SimulationCoordinator()->Services()) {
 				for (uint64_t DeviceNumber = BatchSize; DeviceNumber < BatchSize*2; DeviceNumber++) {
 					Offset_+=BatchSize;
-					StartRemoteSimulation(Service, RunningId_, Details_.id, Offset_, std::min(BatchSize, Details_.devices-Offset_));
+					StartRemoteSimulation(Service, RunningId_, Details_.id, Offset_, std::min(BatchSize, Details_.devices-Offset_), Index++);
+					std::cout << "Starting remote simulation: " << Service.PrivateEndPoint << std::endl;
 				}
 			}
 

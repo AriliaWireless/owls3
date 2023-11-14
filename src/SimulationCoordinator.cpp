@@ -135,7 +135,7 @@ namespace OpenWifi {
 
 	bool SimulationCoordinator::StartSim(const std::string &RunningId, const std::string &SimId,
 		 RESTAPI::Errors::msg &Error, const SecurityObjects::UserInfo &UInfo,
-		 const std::string &MasterURI, const std::string &AccessKey, std::uint64_t Offset, std::uint64_t Limit) {
+		 const std::string &MasterURI, const std::string &AccessKey, std::uint64_t Offset, std::uint64_t Limit, std::uint64_t Index) {
 		OWLSObjects::SimulationDetails  NewSim;
 		if (!StorageService()->SimulationDB().GetRecord("id", SimId, NewSim)) {
 			Error = RESTAPI::Errors::SimulationDoesNotExist;
@@ -146,7 +146,7 @@ namespace OpenWifi {
 		DefaultCapabilities_ = GetSimCapabilitiesPtr();
 		DefaultCapabilities_->set("compatible", NewSim.deviceType);
 
-		auto NewSimulation = std::make_shared<SimulationRecord>(NewSim, Logger(), RunningId, UInfo, MasterURI, AccessKey, Offset, Limit);
+		auto NewSimulation = std::make_shared<SimulationRecord>(NewSim, Logger(), RunningId, UInfo, MasterURI, AccessKey, Offset, Limit, Index);
 		Simulations_[RunningId] = NewSimulation;
 		Simulations_[RunningId]->Runner.Start();
 		SimStats()->StartSim(RunningId, NewSim, UInfo);
@@ -169,7 +169,7 @@ namespace OpenWifi {
         DefaultCapabilities_->set("compatible", NewSim.deviceType);
 
 		RunningId = MicroServiceCreateUUID();
-        auto NewSimulation = std::make_shared<SimulationRecord>(NewSim, Logger(), RunningId, UInfo,"", "", 0 ,0 );
+        auto NewSimulation = std::make_shared<SimulationRecord>(NewSim, Logger(), RunningId, UInfo,"", "", 0 ,0,0);
         Simulations_[RunningId] = NewSimulation;
         Simulations_[RunningId]->Runner.Start();
 		SimStats()->StartSim(RunningId, NewSim, UInfo);

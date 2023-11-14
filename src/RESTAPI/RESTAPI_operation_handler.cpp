@@ -36,10 +36,13 @@ namespace OpenWifi {
 				auto joinRunningId = GetParameter("joinRunningId");
 				auto masterURI = GetParameter("masterURI");
 				auto accessKey = GetParameter("accessKey");
-				if(QB_.Offset==0 || QB_.Limit==0 || joinRunningId.empty() || masterURI.empty() || accessKey.empty()) {
+				auto index = GetParameter("index",0);
+				std::cout << "Starting simulation " << SimId << " on master at slot " <<  index << std::endl;
+				if(QB_.Offset==0 || QB_.Limit==0 || joinRunningId.empty() || masterURI.empty() || accessKey.empty() || index==0) {
 					return BadRequest(RESTAPI::Errors::MissingOrInvalidParameters);
 				}
-				SimulationCoordinator()->StartSim(joinRunningId, Id, Error, UserInfo_.userinfo, masterURI, accessKey, QB_.Offset, QB_.Limit);
+				std::cout << "Starting simulation " << SimId << " from master " << masterURI << " index:" << index << std::endl;
+				SimulationCoordinator()->StartSim(joinRunningId, Id, Error, UserInfo_.userinfo, masterURI, accessKey, QB_.Offset, QB_.Limit, index);
 				SimId = joinRunningId;
 			}
 		} else if (Op == "stop") {

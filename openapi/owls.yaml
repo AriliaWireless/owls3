@@ -655,6 +655,7 @@ paths:
       tags:
         - Status
       operationId: modifyStatusOfRunningSimulation
+      summary: This API is only used by slave services when doing multiple OWLS service coordination
       parameters:
         - in: path
           name: id
@@ -662,6 +663,13 @@ paths:
             type: string
           required: true
           example: Set this to the ID of the running simulation. To get the list of running simulations, set this to '*'
+        - in: path
+          name: index
+          schema:
+            type: integer
+          required: true
+          example: Set this to the ID of the running simulation. To get the list of running simulations, set this to '*'
+
       requestBody:
         description: Simulation details
         content:

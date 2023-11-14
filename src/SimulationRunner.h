@@ -26,11 +26,11 @@ namespace OpenWifi {
         explicit SimulationRunner(const OWLSObjects::SimulationDetails &Details, Poco::Logger &L,
 								  const std::string &RunningId, const SecurityObjects::UserInfo &uinfo,
 								  const std::string &MasterURI, const std::string &AccessKey,
-								  std::uint64_t Offset, std::uint64_t Limit)
+								  std::uint64_t Offset, std::uint64_t Limit, std::uint64_t Index)
 			: Details_(Details), Logger_(L), RunningId_(RunningId)
             , Scheduler_(Poco::Environment::processorCount()*16)
             , UInfo_(uinfo), MasterURI_(MasterURI), AccessKey_(AccessKey)
-		  	, Offset_(Offset), Limit_(Limit) {
+		  	, Offset_(Offset), Limit_(Limit), Index_(Index) {
         }
 
 		void Stop();
@@ -80,7 +80,7 @@ namespace OpenWifi {
         std::uint64_t       StatsUpdates_=0;
 		std::string 		MasterURI_;
 		std::string 		AccessKey_;
-		std::uint64_t 		Offset_=0,Limit_=0;
+		std::uint64_t 		Offset_=0,Limit_=0, Index_=0;
 
         Poco::Timer         UpdateTimer_;
         std::unique_ptr<Poco::TimerCallback<SimulationRunner>> UpdateTimerCallback_;
