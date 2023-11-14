@@ -651,6 +651,33 @@ paths:
         404:
           $ref: '#/components/responses/NotFound'
 
+    put:
+      tags:
+        - Status
+      operationId: modifyStatusOfRunningSimulation
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          example: Set this to the ID of the running simulation. To get the list of running simulations, set this to '*'
+      requestBody:
+        description: Simulation details
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SimulationStatus'
+      responses:
+        200:
+          $ref: '#/components/responses/Success'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        403:
+          $ref: '#/components/responses/Unauthorized'
+        404:
+          $ref: '#/components/responses/NotFound'
+
   /operation/{id}:
     post:
       tags:
@@ -679,6 +706,30 @@ paths:
           schema:
             type: string
             format: uuid
+        - in: query
+          name: offset
+          schema:
+            type: integer
+            format: int64
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            format: int64
+        - in: query
+          name: joinRunningId
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: masterURI
+          schema:
+            type: string
+            format: uri
+        - in: query
+          name: accessKey
+          schema:
+            type: string
 
       responses:
         200:

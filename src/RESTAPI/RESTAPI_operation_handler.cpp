@@ -5,6 +5,7 @@
 #include "RESTAPI_operation_handler.h"
 #include "SimStats.h"
 #include "SimulationCoordinator.h"
+#include "Daemon.h"
 
 namespace OpenWifi {
 	void RESTAPI_operation_handler::DoPost() {
@@ -26,10 +27,21 @@ namespace OpenWifi {
 
 		auto Error=OpenWifi::RESTAPI::Errors::SUCCESS;
 		if (Op == "start") {
-            if(SimulationCoordinator()->IsSimulationRunning(Id)) {
-                return BadRequest(RESTAPI::Errors::SimulationIsAlreadyRunning);
-            }
-			SimulationCoordinator()->StartSim(SimId, Id, Error, UserInfo_.userinfo);
+			if(Daemon()->Master()) {
+				if (SimulationCoordinator()->IsSimulationRunning(Id)) {
+					return BadRequest(RESTAPI::Errors::SimulationIsAlreadyRunning);
+				}
+				SimulationCoordinator()->StartSim(SimId, Id, Error, UserInfo_.userinfo);
+			} else {
+				auto joinRunningId = GetParameter("joinRunningId");
+				auto masterURI = GetParameter("masterURI");
+				auto accessKey = GetParameter("accessKey");
+				if(QB_.Offset==0 || QB_.Limit==0 || joinRunningId.empty() || masterURI.empty() || accessKey.empty()) {
+					return BadRequest(RESTAPI::Errors::MissingOrInvalidParameters);
+				}
+				SimulationCoordinator()->StartSim(joinRunningId, Id, Error, UserInfo_.userinfo, masterURI, accessKey, QB_.Offset, QB_.Limit);
+				SimId = joinRunningId;
+			}
 		} else if (Op == "stop") {
 			SimulationCoordinator()->StopSim(SimId, Error, UserInfo_.userinfo);
 		} else if (Op == "cancel") {

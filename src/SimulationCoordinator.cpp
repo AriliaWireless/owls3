@@ -11,7 +11,7 @@
 #include "SimulationCoordinator.h"
 #include "SimStats.h"
 #include "StorageService.h"
-
+#include <framework/MicroServiceNames.h>
 
 namespace OpenWifi {
 
@@ -44,15 +44,22 @@ namespace OpenWifi {
                 simulation->Runner.Stop();
             }
             Simulations_.clear();
+			LookForServices_ = true;
 		}
 	}
 
 	void SimulationCoordinator::run() {
 		Running_ = true;
 		while (Running_) {
-			Poco::Thread::trySleep(20000);
+
+			Poco::Thread::trySleep(2000);
 			if (!Running_)
 				break;
+
+			//	get the list of running slaves
+			if(LookForServices_) {
+				Services_ = MicroServiceGetServices(uSERVICE_OWLS);
+			}
 
 			uint64_t Now = Utils::Now();
             std::lock_guard     G(Mutex_);
@@ -63,7 +70,7 @@ namespace OpenWifi {
                 if (simulation->Details.simulationLength != 0 &&
                     (Now - SimStats()->GetStartTime(id)) > simulation->Details.simulationLength) {
                     poco_information(Logger(),fmt::format("Simulation'{}' ({}) just completed.", simulation->Details.name,
-                                                          simulation->Runner.Id()));
+                                                          simulation->Runner.RunningId()));
                     std::string Error;
                     simulation->Runner.Stop();
                     SimStats()->EndSim(id);
@@ -74,10 +81,14 @@ namespace OpenWifi {
                     it = Simulations_.erase(it);
                 } else {
                     poco_information(Logger(),fmt::format("Simulation'{}' ({}) still running.", simulation->Details.name,
-                                                          simulation->Runner.Id()));
+                                                          simulation->Runner.RunningId()));
                     ++it;
                 }
             }
+
+			if(Simulations_.empty()) {
+				LookForServices_ = true;
+			}
 		}
 	}
 
@@ -85,18 +96,20 @@ namespace OpenWifi {
 		Logger().notice("Cancel simulation threads...");
 		for (auto &[_,simulation] : Simulations_) {
             simulation->Runner.Stop();
-            SimStats()->EndSim(simulation->Runner.Id());
+            SimStats()->EndSim(simulation->Runner.RunningId());
 		}
         Simulations_.clear();
+		LookForServices_ = true;
 	}
 
 	void SimulationCoordinator::StopSimulations() {
 		Logger().notice("Stopping simulation threads...");
         for (auto &[_,simulation] : Simulations_) {
             simulation->Runner.Stop();
-            SimStats()->EndSim(simulation->Runner.Id());
+            SimStats()->EndSim(simulation->Runner.RunningId());
         }
         Simulations_.clear();
+		LookForServices_ = true;
 	}
 
     static const std::string DefaultCapabilitiesStr = R"(
@@ -120,24 +133,46 @@ namespace OpenWifi {
         return false;
     }
 
-	bool SimulationCoordinator::StartSim(std::string &SimId, const std::string &Id,
-            RESTAPI::Errors::msg &Error, const SecurityObjects::UserInfo &UInfo) {
+	bool SimulationCoordinator::StartSim(const std::string &RunningId, const std::string &SimId,
+		 RESTAPI::Errors::msg &Error, const SecurityObjects::UserInfo &UInfo,
+		 const std::string &MasterURI, const std::string &AccessKey, std::uint64_t Offset, std::uint64_t Limit) {
+		OWLSObjects::SimulationDetails  NewSim;
+		if (!StorageService()->SimulationDB().GetRecord("id", SimId, NewSim)) {
+			Error = RESTAPI::Errors::SimulationDoesNotExist;
+			return false;
+		}
+
+		LookForServices_ = false;
+		DefaultCapabilities_ = GetSimCapabilitiesPtr();
+		DefaultCapabilities_->set("compatible", NewSim.deviceType);
+
+		auto NewSimulation = std::make_shared<SimulationRecord>(NewSim, Logger(), RunningId, UInfo, MasterURI, AccessKey, Offset, Limit);
+		Simulations_[RunningId] = NewSimulation;
+		Simulations_[RunningId]->Runner.Start();
+		SimStats()->StartSim(RunningId, NewSim, UInfo);
+		return true;
+	}
+
+	bool SimulationCoordinator::StartSim(std::string &RunningId, const std::string &SimId,
+            RESTAPI::Errors::msg &Error, const SecurityObjects::UserInfo &UInfo ) {
         std::lock_guard G(Mutex_);
 
         OWLSObjects::SimulationDetails  NewSim;
-		if (!StorageService()->SimulationDB().GetRecord("id", Id, NewSim)) {
+		if (!StorageService()->SimulationDB().GetRecord("id", SimId, NewSim)) {
             Error = RESTAPI::Errors::SimulationDoesNotExist;
 			return false;
 		}
 
+		LookForServices_ = false;
+
 		DefaultCapabilities_ = GetSimCapabilitiesPtr();
         DefaultCapabilities_->set("compatible", NewSim.deviceType);
 
-        SimId = MicroServiceCreateUUID();
-        auto NewSimulation = std::make_shared<SimulationRecord>(NewSim, Logger(), SimId, UInfo);
-        Simulations_[SimId] = NewSimulation;
-        Simulations_[SimId]->Runner.Start();
-		SimStats()->StartSim(SimId, Id, NewSim.devices, UInfo);
+		RunningId = MicroServiceCreateUUID();
+        auto NewSimulation = std::make_shared<SimulationRecord>(NewSim, Logger(), RunningId, UInfo,"", "", 0 ,0 );
+        Simulations_[RunningId] = NewSimulation;
+        Simulations_[RunningId]->Runner.Start();
+		SimStats()->StartSim(RunningId, NewSim, UInfo);
 		return true;
 	}
 
@@ -153,10 +188,10 @@ namespace OpenWifi {
         if(UInfo.userRole==SecurityObjects::ROOT || UInfo.email==sim_hint->second->UInfo.email) {
             sim_hint->second->Runner.Stop();
             OWLSObjects::SimulationStatus S;
-            SimStats()->EndSim(sim_hint->second->Runner.Id());
-            SimStats()->GetCurrent(sim_hint->second->Runner.Id(), S, sim_hint->second->UInfo);
+            SimStats()->EndSim(sim_hint->second->Runner.RunningId());
+            SimStats()->GetCurrent(sim_hint->second->Runner.RunningId(), S, sim_hint->second->UInfo);
             StorageService()->SimulationResultsDB().CreateRecord(S);
-            SimStats()->RemoveSim(sim_hint->second->Runner.Id());
+            SimStats()->RemoveSim(sim_hint->second->Runner.RunningId());
             Simulations_.erase(sim_hint);
             return true;
         }
@@ -175,9 +210,10 @@ namespace OpenWifi {
 
         if(UInfo.userRole==SecurityObjects::ROOT || UInfo.email==sim_hint->second->UInfo.email) {
             sim_hint->second->Runner.Stop();
-            SimStats()->SetState(sim_hint->second->Runner.Id(), "none");
-            SimStats()->RemoveSim(sim_hint->second->Runner.Id());
+            SimStats()->SetState(sim_hint->second->Runner.RunningId(), "none");
+            SimStats()->RemoveSim(sim_hint->second->Runner.RunningId());
             Simulations_.erase(sim_hint);
+			LookForServices_ = true;
             return true;
         }
         Error = RESTAPI::Errors::ACCESS_DENIED;

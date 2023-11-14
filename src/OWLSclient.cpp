@@ -424,7 +424,7 @@ namespace OpenWifi {
         }
         if(Valid_) {
             Runner_->Report().ev_disconnect++;
-            SimStats()->Disconnect(Runner_->Id());
+            SimStats()->Disconnect(Runner_->RunningId());
             if (Connected_) {
                 Reactor_.removeEventHandler(
                         *WS_, Poco::NObserver<SimulationRunner, Poco::Net::ReadableNotification>(
@@ -618,7 +618,7 @@ namespace OpenWifi {
             Object->stringify(*os);
             uint32_t BytesSent = WS_->sendFrame(os->str().c_str(), os->str().size());
             if (BytesSent == os->str().size()) {
-                SimStats()->AddOutMsg(Runner_->Id(),BytesSent);
+                SimStats()->AddOutMsg(Runner_->RunningId(),BytesSent);
                 return true;
             } else {
                 std::cout << fmt::format("SendObject({},{}): size={} sent={}", context, SerialNumber_, os->str().size(), BytesSent) << std::endl;

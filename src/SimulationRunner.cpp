@@ -15,9 +15,165 @@
 #include "SimStats.h"
 #include "SimulationRunner.h"
 #include "UI_Owls_WebSocketNotifications.h"
+#include "Daemon.h"
+#include "SimulationCoordinator.h"
+#include "framework/OpenWifiTypes.h"
 
+#include "framework/OpenAPIRequests.h"
 
 namespace OpenWifi {
+
+	static Poco::Net::HTTPServerResponse::HTTPStatus
+	PostAPI(const Types::MicroServiceMeta &Service,
+			const std::vector<std::pair<std::string,std::string>> &QueryData,
+			const std::string &EndPoint, std::uint64_t TimeOut,
+			Poco::JSON::Object::Ptr &ResponseObject) {
+
+		try {
+			Poco::URI URI(Service.PrivateEndPoint);
+			auto Secure = (URI.getScheme() == "https");
+
+			URI.setPath(EndPoint);
+			for (const auto &qp : QueryData)
+				URI.addQueryParameter(qp.first, qp.second);
+
+			std::string Path(URI.getPathAndQuery());
+
+			Poco::Net::HTTPRequest Request(Poco::Net::HTTPRequest::HTTP_POST, Path,
+										   Poco::Net::HTTPMessage::HTTP_1_1);
+
+			Request.setContentType("application/json");
+			Request.setContentLength(0);
+
+			Request.add("X-API-KEY", Service.AccessKey);
+			Request.add("X-INTERNAL-NAME", MicroServicePublicEndPoint());
+
+			if (Secure) {
+				Poco::Net::HTTPSClientSession Session(URI.getHost(), URI.getPort());
+				Session.setTimeout(Poco::Timespan(TimeOut / 1000, TimeOut % 1000));
+				Session.sendRequest(Request);
+
+				Poco::Net::HTTPResponse Response;
+				std::istream &is = Session.receiveResponse(Response);
+				if (Response.getStatus() == Poco::Net::HTTPResponse::HTTP_OK) {
+					Poco::JSON::Parser P;
+					ResponseObject = P.parse(is).extract<Poco::JSON::Object::Ptr>();
+				} else {
+					Poco::JSON::Parser P;
+					ResponseObject = P.parse(is).extract<Poco::JSON::Object::Ptr>();
+				}
+				return Response.getStatus();
+			} else {
+				Poco::Net::HTTPClientSession Session(URI.getHost(), URI.getPort());
+				Session.setTimeout(Poco::Timespan(TimeOut / 1000, TimeOut % 1000));
+				Session.sendRequest(Request);
+
+				Poco::Net::HTTPResponse Response;
+				std::istream &is = Session.receiveResponse(Response);
+				if (Response.getStatus() == Poco::Net::HTTPResponse::HTTP_OK) {
+					Poco::JSON::Parser P;
+					ResponseObject = P.parse(is).extract<Poco::JSON::Object::Ptr>();
+				} else {
+					Poco::JSON::Parser P;
+					ResponseObject = P.parse(is).extract<Poco::JSON::Object::Ptr>();
+				}
+				return Response.getStatus();
+			}
+		} catch (const Poco::Exception &E) {
+			Poco::Logger::get("REST-CALLER-POST").log(E);
+		}
+		return Poco::Net::HTTPServerResponse::HTTP_GATEWAY_TIMEOUT;
+	}
+
+	static bool StartRemoteSimulation(const Types::MicroServiceMeta &Service,
+							   const std::string &RunningId, const std::string &SimulationId,
+							   std::uint64_t Offset, std::uint64_t Limit) {
+
+		Poco::JSON::Object::Ptr ResponseObject;
+		auto Result = PostAPI(Service,
+							  {
+								  { "operation", "start" },
+								  { "joinRunningId", RunningId },
+								  { "masterURI", MicroServicePrivateEndPoint() },
+								  { "offset", std::to_string(Offset) },
+								  { "limit", std::to_string(Limit) }
+							  },
+							  fmt::format("/api/v1/operation/{}", SimulationId),
+							  60000,
+							  ResponseObject);
+
+		std::cout << "Result: " ;
+	 	ResponseObject->stringify(std::cout);
+		std::cout << std::endl;
+
+		return Result == Poco::Net::HTTPServerResponse::HTTP_OK;
+	}
+
+	 bool SimulationRunner::UpdateMasterSimulation() {
+		OWLSObjects::SimulationStatus S;
+		SimStats()->GetCurrent(RunningId_, S, UInfo_);
+		std::uint64_t 	TimeOut=60000;
+		try {
+			Poco::URI URI(MasterURI_);
+			Poco::JSON::Object::Ptr ResponseObject;
+			auto Secure = (URI.getScheme() == "https");
+
+			URI.setPath(fmt::format("/api/v1/status/{}", RunningId_));
+
+			std::string Path(URI.getPathAndQuery());
+
+			Poco::Net::HTTPRequest Request(Poco::Net::HTTPRequest::HTTP_PUT, Path,
+										   Poco::Net::HTTPMessage::HTTP_1_1);
+
+			Request.setContentType("application/json");
+			Request.setContentLength(0);
+
+			Request.add("X-API-KEY", AccessKey_);
+			Request.add("X-INTERNAL-NAME", MicroServicePublicEndPoint());
+
+			if (Secure) {
+				Poco::Net::HTTPSClientSession Session(URI.getHost(), URI.getPort());
+				Session.setTimeout(Poco::Timespan(TimeOut / 1000, TimeOut % 1000));
+				auto &Body = Session.sendRequest(Request);
+				Poco::JSON::Object BodyObject;
+				S.to_json(BodyObject);
+				Poco::JSON::Stringifier::stringify(S, Body);
+
+				Poco::Net::HTTPResponse Response;
+				std::istream &is = Session.receiveResponse(Response);
+				if (Response.getStatus() == Poco::Net::HTTPResponse::HTTP_OK) {
+					Poco::JSON::Parser P;
+					ResponseObject = P.parse(is).extract<Poco::JSON::Object::Ptr>();
+				} else {
+					Poco::JSON::Parser P;
+					ResponseObject = P.parse(is).extract<Poco::JSON::Object::Ptr>();
+				}
+				return Response.getStatus();
+			} else {
+				Poco::Net::HTTPClientSession Session(URI.getHost(), URI.getPort());
+				Session.setTimeout(Poco::Timespan(TimeOut / 1000, TimeOut % 1000));
+				Session.sendRequest(Request);
+
+				Poco::Net::HTTPResponse Response;
+				std::istream &is = Session.receiveResponse(Response);
+				if (Response.getStatus() == Poco::Net::HTTPResponse::HTTP_OK) {
+					Poco::JSON::Parser P;
+					ResponseObject = P.parse(is).extract<Poco::JSON::Object::Ptr>();
+				} else {
+					Poco::JSON::Parser P;
+					ResponseObject = P.parse(is).extract<Poco::JSON::Object::Ptr>();
+				}
+				return Response.getStatus();
+			}
+		} catch (const Poco::Exception &E) {
+			Poco::Logger::get("REST-CALLER-POST").log(E);
+		}
+		return Poco::Net::HTTPServerResponse::HTTP_GATEWAY_TIMEOUT;
+
+		return true;
+	}
+
+
 	void SimulationRunner::Start() {
 		std::random_device rd;
 		std::mt19937 gen(rd());
@@ -35,15 +191,38 @@ namespace OpenWifi {
             SocketReactorThreadPool_.push_back(std::move(NewReactorThread));
         }
 
-        std::uint64_t ReactorIndex=0;
-		for (uint64_t i = 0; i < Details_.devices; i++) {
-			char Buffer[32];
-			snprintf(Buffer, sizeof(Buffer), "%s%05x0", Details_.macPrefix.c_str(), (unsigned int)i);
-			auto Client = std::make_shared<OWLSclient>(Buffer, Logger_, this, *SocketReactorPool_[ReactorIndex++ % NumberOfReactors_]);
-            Client->SerialNumber_ = Buffer;
-            Client->Valid_ = true;
-            Scheduler_.in(std::chrono::seconds(distrib(gen)), OWLSClientEvents::EstablishConnection, Client, this);
-			Clients_[Buffer] = Client;
+		if(Daemon()->Master() && !SimulationCoordinator()->Services().empty()) {
+			std::uint64_t BatchSize = Details_.devices / (SimulationCoordinator()->Services().size()+1);
+
+			std::uint64_t ReactorIndex=0;
+			for (uint64_t DeviceNumber = 0; DeviceNumber < BatchSize; DeviceNumber++) {
+				char Buffer[32];
+				snprintf(Buffer, sizeof(Buffer), "%s%05x0", Details_.macPrefix.c_str(), (unsigned int)DeviceNumber);
+				auto Client = std::make_shared<OWLSclient>(Buffer, Logger_, this, *SocketReactorPool_[ReactorIndex++ % NumberOfReactors_]);
+				Client->SerialNumber_ = Buffer;
+				Client->Valid_ = true;
+				Scheduler_.in(std::chrono::seconds(distrib(gen)), OWLSClientEvents::EstablishConnection, Client, this);
+				Clients_[Buffer] = Client;
+			}
+
+			for(const auto & Service: SimulationCoordinator()->Services()) {
+				for (uint64_t DeviceNumber = BatchSize; DeviceNumber < BatchSize*2; DeviceNumber++) {
+					Offset_+=BatchSize;
+					StartRemoteSimulation(Service, RunningId_, Details_.id, Offset_, std::min(BatchSize, Details_.devices-Offset_));
+				}
+			}
+
+		} else {
+			std::uint64_t ReactorIndex=0;
+			for (uint64_t DeviceNumber = Offset_; DeviceNumber <Limit_; DeviceNumber++) {
+				char Buffer[32];
+				snprintf(Buffer, sizeof(Buffer), "%s%05x0", Details_.macPrefix.c_str(), (unsigned int)DeviceNumber);
+				auto Client = std::make_shared<OWLSclient>(Buffer, Logger_, this, *SocketReactorPool_[ReactorIndex++ % NumberOfReactors_]);
+				Client->SerialNumber_ = Buffer;
+				Client->Valid_ = true;
+				Scheduler_.in(std::chrono::seconds(distrib(gen)), OWLSClientEvents::EstablishConnection, Client, this);
+				Clients_[Buffer] = Client;
+			}
 		}
 
         UpdateTimerCallback_ = std::make_unique<Poco::TimerCallback<SimulationRunner>>(
@@ -56,9 +235,13 @@ namespace OpenWifi {
     void SimulationRunner::onUpdateTimer([[maybe_unused]] Poco::Timer &timer) {
         if(Running_) {
 
-            OWLSNotifications::SimulationUpdate_t Notification;
-            SimStats()->GetCurrent(Id_, Notification.content, UInfo_);
-            OWLSNotifications::SimulationUpdate(Notification);
+			if (!Daemon()->Master()) {
+				UpdateMasterSimulation();
+			} else {
+				OWLSNotifications::SimulationUpdate_t Notification;
+				SimStats()->GetCurrent(RunningId_, Notification.content, UInfo_);
+				OWLSNotifications::SimulationUpdate(Notification);
+			}
             ++StatsUpdates_;
 
             if((StatsUpdates_ % 15) == 0) {
@@ -82,7 +265,7 @@ namespace OpenWifi {
     void SimulationRunner::ProgressUpdate(SimulationRunner *sim) {
         if(sim->Running_) {
             OWLSNotifications::SimulationUpdate_t Notification;
-            SimStats()->GetCurrent(sim->Id_, Notification.content, sim->UInfo_);
+            SimStats()->GetCurrent(sim->RunningId_, Notification.content, sim->UInfo_);
             OWLSNotifications::SimulationUpdate(Notification);
             // sim->Scheduler_.in(std::chrono::seconds(10), ProgressUpdate, sim);
         }
@@ -193,7 +376,7 @@ namespace OpenWifi {
 
                 case Poco::Net::WebSocket::FRAME_OP_TEXT: {
                     if (MessageSize > 0) {
-                        SimStats()->AddInMsg(Id_, MessageSize);
+                        SimStats()->AddInMsg(RunningId_, MessageSize);
                         Poco::JSON::Parser  parser;
                         auto Frame = parser.parse(IncomingFrame.begin()).extract<Poco::JSON::Object::Ptr>();
 

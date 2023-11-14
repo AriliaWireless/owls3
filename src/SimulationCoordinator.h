@@ -16,9 +16,11 @@
 namespace OpenWifi {
 
     struct SimulationRecord {
-        SimulationRecord(const OWLSObjects::SimulationDetails & details,Poco::Logger &L, const std::string &id, const SecurityObjects::UserInfo &uinfo) :
+        SimulationRecord(const OWLSObjects::SimulationDetails & details,Poco::Logger &L, const std::string &id,
+						 const SecurityObjects::UserInfo &uinfo, const std::string &MasterURI,
+						 const std::string &AccessKey, std::uint64_t Offset, std::uint64_t Limit):
                 Details(details),
-                Runner(details, L, id, uinfo),
+                Runner(details, L, id, uinfo, MasterURI, AccessKey, Offset, Limit),
                 UInfo(uinfo){
 
         }
@@ -26,6 +28,8 @@ namespace OpenWifi {
         OWLSObjects::SimulationDetails  Details;
         SimulationRunner                Runner;
         SecurityObjects::UserInfo       UInfo;
+		std::uint64_t 					Offset=0;
+		std::uint64_t 					Limit=0;
     };
 
 	class SimulationCoordinator : public SubSystemServer, Poco::Runnable {
@@ -39,7 +43,9 @@ namespace OpenWifi {
 		void Stop() final;
 		void run() final;
 
-		bool StartSim(std::string &SimId, const std::string &Id, RESTAPI::Errors::msg &Error, const SecurityObjects::UserInfo &UInfo);
+		bool StartSim(std::string &RunningId, const std::string &SimId, RESTAPI::Errors::msg &Error, const SecurityObjects::UserInfo &UInfo);
+		bool StartSim(const std::string &RunningId, const std::string &SimId, RESTAPI::Errors::msg &Error, const SecurityObjects::UserInfo &UInfo, const std::string &MasterURI, const std::string &AccessKey, std::uint64_t Offset, std::uint64_t Limit);
+
 		bool StopSim(const std::string &Id, RESTAPI::Errors::msg &Error, const SecurityObjects::UserInfo &UInfo);
 		bool CancelSim(const std::string &Id, RESTAPI::Errors::msg &Error, const SecurityObjects::UserInfo &UInfo);
 
@@ -68,6 +74,7 @@ namespace OpenWifi {
         [[nodiscard]] Poco::JSON::Object::Ptr GetSimConfigurationPtr(uint64_t uuid);
         [[nodiscard]] Poco::JSON::Object::Ptr GetSimCapabilitiesPtr();
         bool IsSimulationRunning(const std::string &id);
+		const auto & Services() const { return Services_; }
 
 	  private:
 		Poco::Thread Worker_;
@@ -79,7 +86,8 @@ namespace OpenWifi {
 		std::string RootCAFileName_;
 		Poco::JSON::Object::Ptr DefaultCapabilities_;
 		int Level_ = 0;
-
+		Types::MicroServiceMetaVec Services_;
+		std::atomic_bool LookForServices_{true};
 		SimulationCoordinator() noexcept
 			: SubSystemServer("SimulationCoordinator", "SIM-COORDINATOR", "coordinator") {}
 

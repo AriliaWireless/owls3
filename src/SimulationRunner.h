@@ -23,10 +23,14 @@ namespace OpenWifi {
 
 	class SimulationRunner {
 	  public:
-        explicit SimulationRunner(const OWLSObjects::SimulationDetails &Details, Poco::Logger &L, const std::string &id, const SecurityObjects::UserInfo &uinfo)
-			: Details_(Details), Logger_(L), Id_(id)
+        explicit SimulationRunner(const OWLSObjects::SimulationDetails &Details, Poco::Logger &L,
+								  const std::string &RunningId, const SecurityObjects::UserInfo &uinfo,
+								  const std::string &MasterURI, const std::string &AccessKey,
+								  std::uint64_t Offset, std::uint64_t Limit)
+			: Details_(Details), Logger_(L), RunningId_(RunningId)
             , Scheduler_(Poco::Environment::processorCount()*16)
-            , UInfo_(uinfo){
+            , UInfo_(uinfo), MasterURI_(MasterURI), AccessKey_(AccessKey)
+		  	, Offset_(Offset), Limit_(Limit) {
         }
 
 		void Stop();
@@ -38,7 +42,7 @@ namespace OpenWifi {
         void OnSocketError(const Poco::AutoPtr<Poco::Net::ErrorNotification> &pNf);
         void OnSocketShutdown(const Poco::AutoPtr<Poco::Net::ShutdownNotification> &pNf);
 
-        const std::string & Id() const { return Id_; }
+        const std::string & RunningId() const { return RunningId_; }
 
         inline void AddClientFd(std::int64_t fd, const std::shared_ptr<OWLSclient> &c) {
             std::lock_guard     G(SocketFdMutex_);
@@ -69,15 +73,19 @@ namespace OpenWifi {
 		std::atomic_bool    Running_ = false;
 		CensusReport        CensusReport_;
 		std::string         State_{"stopped"};
-        std::string         Id_;
+        std::string         RunningId_;
         Bosma::Scheduler    Scheduler_;
         SecurityObjects::UserInfo   UInfo_;
         std::uint64_t       NumberOfReactors_=0;
         std::uint64_t       StatsUpdates_=0;
+		std::string 		MasterURI_;
+		std::string 		AccessKey_;
+		std::uint64_t 		Offset_=0,Limit_=0;
 
         Poco::Timer         UpdateTimer_;
         std::unique_ptr<Poco::TimerCallback<SimulationRunner>> UpdateTimerCallback_;
 
+		bool UpdateMasterSimulation();
 
         static void ProgressUpdate(SimulationRunner *s);
 

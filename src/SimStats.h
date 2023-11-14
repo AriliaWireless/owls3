@@ -85,14 +85,14 @@ namespace OpenWifi {
 
         }
 
-		inline void StartSim(const std::string &id, const std::string &simid, uint64_t Devices,
+		inline void StartSim(const std::string &id, OWLSObjects::SimulationDetails &SimDetails,
                              const SecurityObjects::UserInfo & UInfo) {
 			std::lock_guard G(Mutex_);
             auto & CurrentStatus = Status_[id];
 
-			CurrentStatus.expectedDevices = Devices;
+			CurrentStatus.expectedDevices = SimDetails.devices;
             CurrentStatus.id = id;
-            CurrentStatus.simulationId = simid;
+            CurrentStatus.simulationId = SimDetails.id;
             CurrentStatus.state = "running";
             CurrentStatus.liveDevices = CurrentStatus.endTime = CurrentStatus.rx = CurrentStatus.tx = CurrentStatus.msgsTx =
             CurrentStatus.msgsRx = CurrentStatus.timeToFullDevices = CurrentStatus.errorDevices = 0;

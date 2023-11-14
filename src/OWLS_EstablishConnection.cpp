@@ -140,7 +140,7 @@ namespace OpenWifi::OWLSClientEvents {
 */
                 Client->Logger_.information(fmt::format("connect({}): completed.", Client->SerialNumber_));
                 Client->Backoff_=0;
-                SimStats()->Connect(Runner->Id());
+                SimStats()->Connect(Runner->RunningId());
                 return true;
             }
         } catch (const Poco::Exception &E) {
