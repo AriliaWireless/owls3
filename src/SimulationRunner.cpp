@@ -195,6 +195,8 @@ namespace OpenWifi {
 		if(Daemon()->Master() && !SimulationCoordinator()->Services().empty()) {
 			std::uint64_t BatchSize = Details_.devices / (SimulationCoordinator()->Services().size()+1);
 
+			Logger_.information(fmt::format("Starting multi-OWLS simulation {} with {} devices, batch size: {}", RunningId_, Details_.devices, BatchSize));
+
 			std::uint64_t ReactorIndex=0;
 			for (uint64_t DeviceNumber = 0; DeviceNumber < BatchSize; DeviceNumber++) {
 				char Buffer[32];
@@ -217,6 +219,7 @@ namespace OpenWifi {
 
 		} else {
 			std::uint64_t ReactorIndex=0;
+			Logger_.information(fmt::format("Starting OWLS simulation {} with {} devices", RunningId_, Details_.devices));
 			for (uint64_t DeviceNumber = Offset_; DeviceNumber <Limit_; DeviceNumber++) {
 				char Buffer[32];
 				snprintf(Buffer, sizeof(Buffer), "%s%05x0", Details_.macPrefix.c_str(), (unsigned int)DeviceNumber);
