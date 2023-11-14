@@ -220,7 +220,7 @@ namespace OpenWifi {
 		} else {
 			std::uint64_t ReactorIndex=0;
 			Logger_.information(fmt::format("Starting OWLS simulation {} with {} devices", RunningId_, Details_.devices));
-			for (uint64_t DeviceNumber = Offset_; DeviceNumber <Limit_; DeviceNumber++) {
+			for (uint64_t DeviceNumber = 0; DeviceNumber < Details_.devices; DeviceNumber++) {
 				char Buffer[32];
 				snprintf(Buffer, sizeof(Buffer), "%s%05x0", Details_.macPrefix.c_str(), (unsigned int)DeviceNumber);
 				auto Client = std::make_shared<OWLSclient>(Buffer, Logger_, this, *SocketReactorPool_[ReactorIndex++ % NumberOfReactors_]);
