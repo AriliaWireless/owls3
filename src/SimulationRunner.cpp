@@ -236,8 +236,8 @@ namespace OpenWifi {
 				auto Client = std::make_shared<OWLSclient>(Buffer, Logger_, this, *SocketReactorPool_[ReactorIndex++ % NumberOfReactors_]);
 				Client->SerialNumber_ = Buffer;
 				Client->Valid_ = true;
-				Scheduler_.in(std::chrono::seconds(distrib(gen)), OWLSClientEvents::EstablishConnection, Client, this);
 				Clients_[Buffer] = Client;
+				Scheduler_.in(std::chrono::seconds(distrib(gen)), OWLSClientEvents::EstablishConnection, Client, this);
 			}
 		}
 
