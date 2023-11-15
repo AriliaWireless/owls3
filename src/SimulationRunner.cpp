@@ -96,7 +96,8 @@ namespace OpenWifi {
 								  { "joinRunningId", RunningId },
 								  { "masterURI", MicroServicePrivateEndPoint() },
 								  { "offset", std::to_string(Offset) },
-								  { "limit", std::to_string(Limit) }
+								  { "limit", std::to_string(Limit) },
+								  { "index", std::to_string(Index) }
 							  },
 							  fmt::format("/api/v1/operation/{}", SimulationId),
 							  60000,
@@ -174,8 +175,13 @@ namespace OpenWifi {
 		return true;
 	}
 
-
 	void SimulationRunner::Start() {
+		Worker_.start(*this);
+	}
+
+	void SimulationRunner::run() {
+
+		Logger_.information(fmt::format("Starting simulation {} with {} devices", RunningId_, Details_.devices));
 		std::random_device rd;
 		std::mt19937 gen(rd());
 		std::uniform_int_distribution<> distrib(5, 25);
@@ -219,8 +225,12 @@ namespace OpenWifi {
 
 		} else {
 			std::uint64_t ReactorIndex=0;
+			if(Daemon()->Master()) {
+				Offset_ = 0 ;
+				Limit_ = Details_.devices;
+			}
 			Logger_.information(fmt::format("Starting OWLS simulation {} with {} devices", RunningId_, Details_.devices));
-			for (uint64_t DeviceNumber = 0; DeviceNumber < Details_.devices; DeviceNumber++) {
+			for (uint64_t DeviceNumber = Offset_; DeviceNumber < Limit_; DeviceNumber++) {
 				char Buffer[32];
 				snprintf(Buffer, sizeof(Buffer), "%s%05x0", Details_.macPrefix.c_str(), (unsigned int)DeviceNumber);
 				auto Client = std::make_shared<OWLSclient>(Buffer, Logger_, this, *SocketReactorPool_[ReactorIndex++ % NumberOfReactors_]);
@@ -236,6 +246,8 @@ namespace OpenWifi {
         UpdateTimer_.setStartInterval(10000);
         UpdateTimer_.setPeriodicInterval(2 * 1000);
         UpdateTimer_.start(*UpdateTimerCallback_, MicroServiceTimerPool());
+
+		Logger_.information(fmt::format("Simulation {} running", RunningId_));
 	}
 
     void SimulationRunner::onUpdateTimer([[maybe_unused]] Poco::Timer &timer) {

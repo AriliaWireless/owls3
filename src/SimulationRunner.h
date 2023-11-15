@@ -21,7 +21,7 @@
 
 namespace OpenWifi {
 
-	class SimulationRunner {
+	class SimulationRunner : Poco::Runnable {
 	  public:
         explicit SimulationRunner(const OWLSObjects::SimulationDetails &Details, Poco::Logger &L,
 								  const std::string &RunningId, const SecurityObjects::UserInfo &uinfo,
@@ -37,6 +37,8 @@ namespace OpenWifi {
 		void Start();
         inline const OWLSObjects::SimulationDetails & Details() const { return Details_; }
         CensusReport & Report() { return CensusReport_; }
+
+		void run() override;
 
         void OnSocketReadable(const Poco::AutoPtr<Poco::Net::ReadableNotification> &pNf);
         void OnSocketError(const Poco::AutoPtr<Poco::Net::ErrorNotification> &pNf);
@@ -80,7 +82,8 @@ namespace OpenWifi {
         std::uint64_t       StatsUpdates_=0;
 		std::string 		MasterURI_;
 		std::string 		AccessKey_;
-		std::uint64_t 		Offset_=0,Limit_=0, Index_=0;
+		std::uint64_t 		Offset_=0, Limit_=0, Index_=0;
+		Poco::Thread		Worker_;
 
         Poco::Timer         UpdateTimer_;
         std::unique_ptr<Poco::TimerCallback<SimulationRunner>> UpdateTimerCallback_;
