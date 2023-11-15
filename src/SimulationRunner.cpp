@@ -184,7 +184,6 @@ namespace OpenWifi {
 		Logger_.information(fmt::format("Starting simulation {} with {} devices", RunningId_, Details_.devices));
 		std::random_device rd;
 		std::mt19937 gen(rd());
-		std::uniform_int_distribution<> distrib(5, 25);
 
         Running_ = true;
 		std::lock_guard Lock(Mutex_);
@@ -202,6 +201,8 @@ namespace OpenWifi {
 			std::uint64_t BatchSize = Details_.devices / (SimulationCoordinator()->Services().size()+1);
 
 			Logger_.information(fmt::format("Starting multi-OWLS simulation {} with {} devices, batch size: {}", RunningId_, Details_.devices, BatchSize));
+
+			std::uniform_int_distribution<> distrib(5, 5 * (2+((int)BatchSize / 100 )));
 
 			std::uint64_t ReactorIndex=0;
 			for (uint64_t DeviceNumber = 0; DeviceNumber < BatchSize; DeviceNumber++) {
@@ -229,6 +230,9 @@ namespace OpenWifi {
 				Offset_ = 0 ;
 				Limit_ = Details_.devices;
 			}
+
+			std::uniform_int_distribution<> distrib(5, 5 * (2+((int)Limit_ / 100 )));
+
 			Logger_.information(fmt::format("Starting OWLS simulation {} with {} devices", RunningId_, Details_.devices));
 			for (uint64_t DeviceNumber = Offset_; DeviceNumber < Limit_; DeviceNumber++) {
 				char Buffer[32];
