@@ -95,20 +95,20 @@ namespace Bosma {
             sleeper.interrupt();
         }
 
-        template<typename _Callable, typename... _Args>
-        void in(const Clock::time_point time, _Callable &&f, _Args &&... args) {
+        template<typename Callable, typename... Args>
+        void in(const Clock::time_point time, Callable &&f, Args &&... args) {
             std::shared_ptr<Task> t = std::make_shared<InTask>(
-                    std::bind(std::forward<_Callable>(f), std::forward<_Args>(args)...));
+                    std::bind(std::forward<Callable>(f), std::forward<Args>(args)...));
             add_task(time, std::move(t));
         }
 
-        template<typename _Callable, typename... _Args>
-        void in(const Clock::duration time, _Callable &&f, _Args &&... args) {
-            in(Clock::now() + time, std::forward<_Callable>(f), std::forward<_Args>(args)...);
+        template<typename Callable, typename... Args>
+        void in(const Clock::duration time, Callable &&f, Args &&... args) {
+            in(Clock::now() + time, std::forward<Callable>(f), std::forward<Args>(args)...);
         }
 
-        template<typename _Callable, typename... _Args>
-        void at(const std::string &time, _Callable &&f, _Args &&... args) {
+        template<typename Callable, typename... Args>
+        void at(const std::string &time, Callable &&f, Args &&... args) {
             // get current time as a tm object
             auto time_now = Clock::to_time_t(Clock::now());
             std::tm tm = *std::localtime(&time_now);
@@ -132,13 +132,13 @@ namespace Bosma {
                 throw std::runtime_error("Cannot parse time string: " + time);
             }
 
-            in(tp, std::forward<_Callable>(f), std::forward<_Args>(args)...);
+            in(tp, std::forward<Callable>(f), std::forward<Args>(args)...);
         }
 
-        template<typename _Callable, typename... _Args>
-        void every(const Clock::duration time, _Callable &&f, _Args &&... args) {
-            std::shared_ptr<Task> t = std::make_shared<EveryTask>(time, std::bind(std::forward<_Callable>(f),
-                                                                                  std::forward<_Args>(args)...));
+        template<typename Callable, typename... Args>
+        void every(const Clock::duration time, Callable &&f, Args &&... args) {
+            std::shared_ptr<Task> t = std::make_shared<EveryTask>(time, std::bind(std::forward<Callable>(f),
+                                                                                  std::forward<Args>(args)...));
             auto next_time = t->get_new_time();
             add_task(next_time, std::move(t));
         }
@@ -153,18 +153,18 @@ namespace Bosma {
 //    │ │ │ │ │
 //    │ │ │ │ │
 //    * * * * *
-        template<typename _Callable, typename... _Args>
-        void cron(const std::string &expression, _Callable &&f, _Args &&... args) {
-            std::shared_ptr<Task> t = std::make_shared<CronTask>(expression, std::bind(std::forward<_Callable>(f),
-                                                                                       std::forward<_Args>(args)...));
+        template<typename Callable, typename... Args>
+        void cron(const std::string &expression, Callable &&f, Args &&... args) {
+            std::shared_ptr<Task> t = std::make_shared<CronTask>(expression, std::bind(std::forward<Callable>(f),
+                                                                                       std::forward<Args>(args)...));
             auto next_time = t->get_new_time();
             add_task(next_time, std::move(t));
         }
 
-        template<typename _Callable, typename... _Args>
-        void interval(const Clock::duration time, _Callable &&f, _Args &&... args) {
-            std::shared_ptr<Task> t = std::make_shared<EveryTask>(time, std::bind(std::forward<_Callable>(f),
-                                                                                  std::forward<_Args>(args)...), true);
+        template<typename Callable, typename... Args>
+        void interval(const Clock::duration time, Callable &&f, Args &&... args) {
+            std::shared_ptr<Task> t = std::make_shared<EveryTask>(time, std::bind(std::forward<Callable>(f),
+                                                                                  std::forward<Args>(args)...), true);
             add_task(Clock::now(), std::move(t));
         }
 
@@ -174,7 +174,7 @@ namespace Bosma {
         Bosma::InterruptableSleep sleeper;
 
         std::multimap<Clock::time_point, std::shared_ptr<Task>> tasks;
-        std::recursive_mutex lock;
+        std::mutex lock;
         ctpl::thread_pool threads;
 
         void add_task(const Clock::time_point time, std::shared_ptr<Task> t) {
