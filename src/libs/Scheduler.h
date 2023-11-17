@@ -174,17 +174,17 @@ namespace Bosma {
         Bosma::InterruptableSleep sleeper;
 
         std::multimap<Clock::time_point, std::shared_ptr<Task>> tasks;
-        std::mutex lock;
+        std::recursive_mutex lock;
         ctpl::thread_pool threads;
 
         void add_task(const Clock::time_point time, std::shared_ptr<Task> t) {
-            std::lock_guard<std::mutex> l(lock);
+            std::lock_guard l(lock);
             tasks.emplace(time, std::move(t));
             sleeper.interrupt();
         }
 
         bool find_sleep_time(Clock::time_point &sleep_value) {
-            std::lock_guard<std::mutex> l(lock);
+            std::lock_guard l(lock);
             if(tasks.empty()) {
                 return false;
             }
@@ -193,7 +193,7 @@ namespace Bosma {
         }
 
         void manage_tasks() {
-            std::lock_guard<std::mutex> l(lock);
+            std::lock_guard l(lock);
 
             auto end_of_tasks_to_run = tasks.upper_bound(Clock::now());
 
