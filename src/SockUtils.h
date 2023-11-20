@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <iostream>
 #include <Poco/Net/NetworkInterface.h>
 namespace OpenWifi::SockUtils {
 
