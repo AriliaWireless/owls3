@@ -217,7 +217,8 @@ namespace OpenWifi {
 
 			std::uint64_t Index=1;
 			for(const auto & Service: SimulationCoordinator()->Services()) {
-				for (uint64_t DeviceNumber = BatchSize; DeviceNumber < BatchSize*2; DeviceNumber++) {
+				std::uint64_t StartValue = BatchSize;
+				for (uint64_t DeviceNumber = StartValue; DeviceNumber < std::min(StartValue+BatchSize,Details_.devices); DeviceNumber++) {
 					Offset_+=BatchSize;
 					StartRemoteSimulation(Service, RunningId_, Details_.id, Offset_, std::min(BatchSize, Details_.devices-Offset_), Index++);
 					std::cout << "Starting remote simulation: " << Service.PrivateEndPoint << std::endl;
