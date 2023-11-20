@@ -23,13 +23,13 @@ namespace OpenWifi {
 
 	class SimulationRunner : Poco::Runnable {
 	  public:
-        explicit SimulationRunner(const OWLSObjects::SimulationDetails &Details, Poco::Logger &L,
-								  const std::string &RunningId, const SecurityObjects::UserInfo &uinfo,
-								  const std::string &MasterURI, const std::string &AccessKey,
+        explicit SimulationRunner(OWLSObjects::SimulationDetails Details, Poco::Logger &Logger,
+								  std::string RunningId, SecurityObjects::UserInfo uinfo,
+								  std::string MasterURI, std::string AccessKey,
 								  std::uint64_t Offset, std::uint64_t Limit, std::uint64_t Index)
-			: Details_(Details), Logger_(L), RunningId_(RunningId)
+			: Details_(std::move(Details)), Logger_(Logger), RunningId_(std::move(RunningId))
             , Scheduler_(Poco::Environment::processorCount()*16)
-            , UInfo_(uinfo), MasterURI_(MasterURI), AccessKey_(AccessKey)
+            , UInfo_(std::move(uinfo)), MasterURI_(std::move(MasterURI)), AccessKey_(std::move(AccessKey))
 		  	, Offset_(Offset), Limit_(Limit), Index_(Index) {
         }
 

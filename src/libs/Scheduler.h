@@ -22,7 +22,7 @@ namespace Bosma {
         explicit Task(std::function<void()> &&f, bool recur = false, bool interval = false) :
                 f(std::move(f)), recur(recur), interval(interval) {}
 
-        virtual Clock::time_point get_new_time() const = 0;
+        [[nodiscard]] virtual Clock::time_point get_new_time() const = 0;
         virtual ~Task() = default;
 
         std::function<void()> f;

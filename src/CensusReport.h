@@ -8,6 +8,10 @@
 
 namespace OpenWifi {
     struct CensusReport {
+		explicit CensusReport() {
+			Reset();
+		}
+
         std::uint64_t
             ev_none,
             ev_reconnect,

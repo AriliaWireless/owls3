@@ -7,11 +7,12 @@
 
 #include <framework/MicroServiceFuncs.h>
 #include <framework/utils.h>
+#include <framework/MicroServiceNames.h>
 
 #include "SimulationCoordinator.h"
 #include "SimStats.h"
 #include "StorageService.h"
-#include <framework/MicroServiceNames.h>
+
 
 namespace OpenWifi {
 
@@ -125,12 +126,7 @@ namespace OpenWifi {
 
     bool SimulationCoordinator::IsSimulationRunning(const std::string &id) {
         std::lock_guard G(Mutex_);
-
-        for(const auto &[instance_id,simulation]:Simulations_) {
-            if(simulation->Details.id==id)
-                return true;
-        }
-        return false;
+		return std::any_of(begin(Simulations_), end(Simulations_), [&](const auto &S) { return S.second->Details.id==id; });
     }
 
 	bool SimulationCoordinator::StartSim(const std::string &RunningId, const std::string &SimId,
