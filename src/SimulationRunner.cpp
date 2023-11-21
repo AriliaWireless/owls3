@@ -200,9 +200,6 @@ namespace OpenWifi {
 		if(Daemon()->Master() && !SimulationCoordinator()->Services().empty()) {
 			std::uint64_t BatchSize = Details_.devices / (SimulationCoordinator()->Services().size()+1);
 
-			// we are rounding this to share the load equally. This could mena removing a few devices.
-			Details_.devices = BatchSize * (SimulationCoordinator()->Services().size()+1);
-
 			auto Pad = Details_.devices % (BatchSize *(SimulationCoordinator()->Services().size()+1));
 
 			Logger_.information(fmt::format("Starting multi-OWLS simulation {} with {} devices, batch size: {}", RunningId_, Details_.devices, BatchSize));
