@@ -117,6 +117,14 @@ namespace OpenWifi::OWLSObjects {
 		return false;
 	}
 
+	void SimulationStatus::log(Poco::Logger &L) const {
+		L.information(Poco::format("Simulation %s, state %s, tx %Lu, rx %Lu, msgsTx %Lu, msgsRx %Lu, liveDevices %Lu, "
+								   "timeToFullDevices %Lu, startTime %Lu, endTime %Lu, errorDevices %Lu, owner %s, "
+								   "expectedDevices %Lu",
+								   id, state, tx, rx, msgsTx, msgsRx, liveDevices, timeToFullDevices, startTime,
+								   endTime, errorDevices, owner, expectedDevices));
+	}
+
 	void Dashboard::to_json([[maybe_unused]] Poco::JSON::Object &Obj) const {}
 
 	bool Dashboard::from_json([[maybe_unused]] const Poco::JSON::Object::Ptr &Obj) { return true; }

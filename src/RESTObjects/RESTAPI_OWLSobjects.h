@@ -7,6 +7,7 @@
 
 #include "Poco/JSON/Object.h"
 #include <vector>
+#include <Poco/Logger.h>
 
 namespace OpenWifi::OWLSObjects {
 
@@ -61,7 +62,8 @@ namespace OpenWifi::OWLSObjects {
 
         void to_json(Poco::JSON::Object &Obj) const;
 		bool from_json(const Poco::JSON::Object::Ptr &Obj);
-    };
+		void log(Poco::Logger &logger) const;
+};
 
 	struct Dashboard {
 		int O;

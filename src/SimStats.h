@@ -217,6 +217,8 @@ namespace OpenWifi {
 				return;
 			}
 
+			SimStatus.log(Logger());
+
 			if(Index<stats_hint->second.size()) {
 				stats_hint->second[Index] = SimStatus;
 			}
