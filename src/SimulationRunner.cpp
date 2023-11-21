@@ -265,7 +265,7 @@ namespace OpenWifi {
 				UpdateMasterSimulation();
 			} else {
 				OWLSNotifications::SimulationUpdate_t Notification;
-				SimStats()->GetCurrent(RunningId_, Notification.content, UInfo_);
+				SimStats()->GetReportableStats(RunningId_, Notification.content, UInfo_);
 				OWLSNotifications::SimulationUpdate(Notification);
 			}
             ++StatsUpdates_;
