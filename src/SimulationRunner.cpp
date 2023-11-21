@@ -261,12 +261,13 @@ namespace OpenWifi {
     void SimulationRunner::onUpdateTimer([[maybe_unused]] Poco::Timer &timer) {
         if(Running_) {
 
-			if (!Daemon()->Master()) {
-				UpdateMasterSimulation();
-			} else {
+			if (Daemon()->Master()) {
 				OWLSNotifications::SimulationUpdate_t Notification;
 				SimStats()->GetCurrent(RunningId_, Notification.content, UInfo_);
+				Notification.content.log(Logger_);
 				OWLSNotifications::SimulationUpdate(Notification);
+			} else {
+				UpdateMasterSimulation();
 			}
             ++StatsUpdates_;
 

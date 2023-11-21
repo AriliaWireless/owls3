@@ -78,40 +78,37 @@ namespace OpenWifi {
 		inline void GetCurrent(const std::string &id, OWLSObjects::SimulationStatus &ReturnedResults,
                                const SecurityObjects::UserInfo & UInfo) {
 			std::lock_guard G(Mutex_);
-            auto stats_hint = Status_.find(id);
-            if(stats_hint==end(Status_)) {
-                return;
-            }
-			if(Daemon()->Master()) {
-				if (UInfo.userRole == SecurityObjects::ROOT ||
-					UInfo.email == stats_hint->second[0].owner) {
+			auto stats_hint = Status_.find(id);
+			if (stats_hint == end(Status_)) {
+				return;
+			}
+			if (UInfo.userRole == SecurityObjects::ROOT ||
+				UInfo.email == stats_hint->second[0].owner) {
+				if (Daemon()->Master()) {
 					OWLSObjects::SimulationStatus Result = stats_hint->second[0];
 					Result.liveDevices = Result.rx = Result.tx = Result.msgsRx = Result.msgsTx =
-					Result.errorDevices = Result.startTime = Result.endTime = 0;
-					DBGLINE;
-					Result.log(Logger());
-					Result = std::accumulate(begin(stats_hint->second), end(stats_hint->second), Result,
-									[&]([[maybe_unused]] const OWLSObjects::SimulationStatus &A,
-									   const OWLSObjects::SimulationStatus &B) {
-										OWLSObjects::SimulationStatus S;
-										S.liveDevices = A.liveDevices +B.liveDevices;
-										S.rx = A.rx + B.rx;
-										S.tx = A.tx + B.tx;
-										S.msgsRx = A.msgsRx + B.msgsRx;
-										S.msgsTx = A.msgsTx +B.msgsTx;
-										S.errorDevices = A.errorDevices + B.errorDevices;
-										DBGLINE;
-										A.log(Logger());;
-										DBGLINE;
-										B.log(Logger());;
-										return S;
-									});
+						Result.errorDevices = Result.startTime = Result.endTime = 0;
+					Result =
+						std::accumulate(begin(stats_hint->second), end(stats_hint->second), Result,
+										[&](const OWLSObjects::SimulationStatus &A,
+											const OWLSObjects::SimulationStatus &B) {
+											OWLSObjects::SimulationStatus S;
+											S.liveDevices = A.liveDevices + B.liveDevices;
+											S.rx = A.rx + B.rx;
+											S.tx = A.tx + B.tx;
+											S.msgsRx = A.msgsRx + B.msgsRx;
+											S.msgsTx = A.msgsTx + B.msgsTx;
+											S.errorDevices = A.errorDevices + B.errorDevices;
+											DBGLINE;
+											A.log(Logger());
+											DBGLINE;
+											B.log(Logger());
+											return S;
+										});
 					ReturnedResults = Result;
-					DBGLINE;
-					ReturnedResults.log(Logger());
+				} else {
+					ReturnedResults = stats_hint->second[0];
 				}
-			} else {
-				ReturnedResults = stats_hint->second[0];
 			}
 		}
 
