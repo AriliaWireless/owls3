@@ -99,10 +99,6 @@ namespace OpenWifi {
 											S.msgsRx = A.msgsRx + B.msgsRx;
 											S.msgsTx = A.msgsTx + B.msgsTx;
 											S.errorDevices = A.errorDevices + B.errorDevices;
-											DBGLINE;
-											A.log(Logger());
-											DBGLINE;
-											B.log(Logger());
 											return S;
 										});
 					ReturnedResults = Result;
