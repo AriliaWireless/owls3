@@ -97,7 +97,8 @@ namespace OpenWifi {
 								  { "masterURI", MicroServicePrivateEndPoint() },
 								  { "offset", std::to_string(Offset) },
 								  { "limit", std::to_string(Limit) },
-								  { "index", std::to_string(Index) }
+								  { "index", std::to_string(Index) },
+								  { "accessKey", AccessKey_ }
 							  },
 							  fmt::format("/api/v1/operation/{}", SimulationId),
 							  60000,

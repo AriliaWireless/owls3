@@ -173,7 +173,7 @@ namespace OpenWifi {
         DefaultCapabilities_->set("compatible", NewSim.deviceType);
 
 		RunningId = MicroServiceCreateUUID();
-        auto NewSimulation = std::make_shared<SimulationRecord>(NewSim, Logger(), RunningId, UInfo,"", "", 0 ,0,0);
+        auto NewSimulation = std::make_shared<SimulationRecord>(NewSim, Logger(), RunningId, UInfo, MicroServicePrivateEndPoint(), MicroServiceAccessKey(), 0 ,0,0);
         Simulations_[RunningId] = NewSimulation;
         Simulations_[RunningId]->Runner.Start();
 		SimStats()->StartSim(RunningId, NewSim, UInfo);
