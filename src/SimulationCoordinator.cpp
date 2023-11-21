@@ -61,9 +61,12 @@ namespace OpenWifi {
 			//	get the list of running slaves
 			if(LookForServices_ && Daemon()->Master() ) {
 				Services_ = MicroServiceGetServices( uSERVICE_OWLS );
-				Logger().information(fmt::format("Found {} OWLS services.", Services_.size()));
-				for(const auto &s:Services_) {
-					Logger().information(fmt::format("Found OWLS service @ {}", s.PrivateEndPoint));
+				if(Logger().trace()) {
+					Logger().information(fmt::format("Found {} OWLS services.", Services_.size()));
+					for (const auto &s : Services_) {
+						Logger().information(
+							fmt::format("Found OWLS service @ {}", s.PrivateEndPoint));
+					}
 				}
 			}
 
