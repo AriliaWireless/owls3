@@ -85,7 +85,9 @@ namespace OpenWifi {
                     SimStats()->EndSim(id);
                     OWLSObjects::SimulationStatus S;
                     SimStats()->GetCurrent(id, S, simulation->UInfo);
-                    StorageService()->SimulationResultsDB().CreateRecord(S);
+					if(Daemon()->Master()) {
+						StorageService()->SimulationResultsDB().CreateRecord(S);
+					}
                     SimStats()->RemoveSim(id);
                     it = Simulations_.erase(it);
                 } else {
