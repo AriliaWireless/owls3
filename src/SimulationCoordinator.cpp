@@ -140,6 +140,7 @@ namespace OpenWifi {
 	bool SimulationCoordinator::StartSim(const std::string &RunningId, const std::string &SimId,
 		 RESTAPI::Errors::msg &Error, const SecurityObjects::UserInfo &UInfo,
 		 const std::string &MasterURI, const std::string &AccessKey, std::uint64_t Offset, std::uint64_t Limit, std::uint64_t Index) {
+
 		OWLSObjects::SimulationDetails  NewSim;
 		if (!StorageService()->SimulationDB().GetRecord("id", SimId, NewSim)) {
 			Error = RESTAPI::Errors::SimulationDoesNotExist;

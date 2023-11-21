@@ -16,11 +16,11 @@
 namespace OpenWifi {
 
     struct SimulationRecord {
-        SimulationRecord(const OWLSObjects::SimulationDetails & details,Poco::Logger &L, const std::string &id,
+        SimulationRecord(const OWLSObjects::SimulationDetails & details,Poco::Logger &Logger, const std::string &RunningId,
 						 const SecurityObjects::UserInfo &uinfo, const std::string &MasterURI,
 						 const std::string &AccessKey, std::uint64_t Offset, std::uint64_t Limit, std::uint64_t Index):
                 Details(details),
-                Runner(details, L, id, uinfo, MasterURI, AccessKey, Offset, Limit, Index),
+                Runner(details, Logger, RunningId, uinfo, MasterURI, AccessKey, Offset, Limit, Index),
                 UInfo(uinfo){
 
         }
