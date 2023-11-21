@@ -200,12 +200,18 @@ namespace OpenWifi {
 		if(Daemon()->Master() && !SimulationCoordinator()->Services().empty()) {
 			std::uint64_t BatchSize = Details_.devices / (SimulationCoordinator()->Services().size()+1);
 
+			// we are rounding this so we share the load equally. This could mena removing a few devices.
+			Details_.devices = BatchSize * (SimulationCoordinator()->Services().size()+1);
+
+			auto Pad = Details_.devices % (BatchSize *(SimulationCoordinator()->Services().size()+1));
+
 			Logger_.information(fmt::format("Starting multi-OWLS simulation {} with {} devices, batch size: {}", RunningId_, Details_.devices, BatchSize));
 
 			std::uniform_int_distribution<> distrib(5, 5 * (2+((int)BatchSize / 100 )));
 
 			std::uint64_t ReactorIndex=0;
-			for (uint64_t DeviceNumber = 0; DeviceNumber < BatchSize; DeviceNumber++) {
+			Logger_.information(fmt::format("Starting multi-OWLS: master with devices {} to {} , batch size: {}", 0, Details_.devices, BatchSize));
+			for (uint64_t DeviceNumber = 0; DeviceNumber < BatchSize+Pad; DeviceNumber++) {
 				char Buffer[32];
 				snprintf(Buffer, sizeof(Buffer), "%s%05x0", Details_.macPrefix.c_str(), (unsigned int)DeviceNumber);
 				auto Client = std::make_shared<OWLSclient>(Buffer, Logger_, this, *SocketReactorPool_[ReactorIndex++ % NumberOfReactors_]);
@@ -216,13 +222,10 @@ namespace OpenWifi {
 			}
 
 			std::uint64_t Index=1;
+			std::uint64_t StartValue = BatchSize+Pad;
 			for(const auto & Service: SimulationCoordinator()->Services()) {
-				std::uint64_t StartValue = BatchSize;
-				for (uint64_t DeviceNumber = StartValue; DeviceNumber < std::min(StartValue+BatchSize,Details_.devices); DeviceNumber++) {
-					Offset_+=BatchSize;
-					StartRemoteSimulation(Service, RunningId_, Details_.id, Offset_, std::min(BatchSize, Details_.devices-Offset_), Index++);
-					std::cout << "Starting remote simulation: " << Service.PrivateEndPoint << std::endl;
-				}
+				StartRemoteSimulation(Service, RunningId_, Details_.id, StartValue, std::min(BatchSize, Details_.devices-StartValue), Index++);
+				StartValue += BatchSize;
 			}
 
 		} else {
