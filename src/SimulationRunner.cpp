@@ -200,7 +200,7 @@ namespace OpenWifi {
 		if(Daemon()->Master() && !SimulationCoordinator()->Services().empty()) {
 			std::uint64_t BatchSize = Details_.devices / (SimulationCoordinator()->Services().size()+1);
 
-			// we are rounding this so we share the load equally. This could mena removing a few devices.
+			// we are rounding this to share the load equally. This could mena removing a few devices.
 			Details_.devices = BatchSize * (SimulationCoordinator()->Services().size()+1);
 
 			auto Pad = Details_.devices % (BatchSize *(SimulationCoordinator()->Services().size()+1));
@@ -210,7 +210,7 @@ namespace OpenWifi {
 			std::uniform_int_distribution<> distrib(5, 5 * (2+((int)BatchSize / 100 )));
 
 			std::uint64_t ReactorIndex=0;
-			Logger_.information(fmt::format("Starting multi-OWLS: master with devices {} to {} , batch size: {}", 0, Details_.devices, BatchSize));
+			Logger_.information(fmt::format("Starting multi-OWLS: master with devices {} to {} , batch size: {}", 0, BatchSize+Pad-1, BatchSize));
 			for (uint64_t DeviceNumber = 0; DeviceNumber < BatchSize+Pad; DeviceNumber++) {
 				char Buffer[32];
 				snprintf(Buffer, sizeof(Buffer), "%s%05x0", Details_.macPrefix.c_str(), (unsigned int)DeviceNumber);
@@ -224,7 +224,9 @@ namespace OpenWifi {
 			std::uint64_t Index=1;
 			std::uint64_t StartValue = BatchSize+Pad;
 			for(const auto & Service: SimulationCoordinator()->Services()) {
-				StartRemoteSimulation(Service, RunningId_, Details_.id, StartValue, std::min(BatchSize, Details_.devices-StartValue), Index++);
+				auto ThisBatchSize = std::min(BatchSize, Details_.devices-StartValue);
+				Logger_.information(fmt::format("Starting multi-OWLS: secondary {} with devices starting at {} with  batch size: {}", Service.PrivateEndPoint, StartValue, ThisBatchSize));
+				StartRemoteSimulation(Service, RunningId_, Details_.id, StartValue, ThisBatchSize, Index++);
 				StartValue += BatchSize;
 			}
 
