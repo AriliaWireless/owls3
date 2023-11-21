@@ -88,7 +88,7 @@ namespace OpenWifi {
 					OWLSObjects::SimulationStatus Result = stats_hint->second[0];
 					Result.liveDevices = Result.rx = Result.tx = Result.msgsRx = Result.msgsTx =
 					Result.errorDevices = Result.startTime = Result.endTime = 0;
-					std::accumulate(begin(stats_hint->second), end(stats_hint->second), Result,
+					Result = std::accumulate(begin(stats_hint->second), end(stats_hint->second), Result,
 									[]([[maybe_unused]] const OWLSObjects::SimulationStatus &A,
 									   const OWLSObjects::SimulationStatus &B) {
 										OWLSObjects::SimulationStatus S;
