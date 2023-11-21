@@ -173,7 +173,7 @@ namespace OpenWifi {
 		} catch (const Poco::Exception &E) {
 			Poco::Logger::get("REST-CALLER-POST").log(E);
 		}
-		return Poco::Net::HTTPServerResponse::HTTP_GATEWAY_TIMEOUT;
+		return false;
 	}
 
 	void SimulationRunner::Start() {

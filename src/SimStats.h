@@ -218,9 +218,10 @@ namespace OpenWifi {
 			}
 
 			SimStatus.log(Logger());
-
 			if(Index<stats_hint->second.size()) {
 				stats_hint->second[Index] = SimStatus;
+			} else {
+				Logger().warning(fmt::format("Invalid index {} for simulation {} size {}", Index, SimStatus.id, stats_hint->second.size()));
 			}
 		}
 
