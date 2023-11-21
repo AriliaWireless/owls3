@@ -12,6 +12,7 @@
 #include "SimulationCoordinator.h"
 #include "SimStats.h"
 #include "StorageService.h"
+#include "Daemon.h"
 
 
 namespace OpenWifi {
@@ -58,8 +59,9 @@ namespace OpenWifi {
 				break;
 
 			//	get the list of running slaves
-			if(LookForServices_) {
+			if(LookForServices_ && Daemon()->Master() ) {
 				Services_ = MicroServiceGetServices(uSERVICE_OWLS);
+				Logger().information(fmt::format("Found {} OWLS services.", Services_.size()));
 			}
 
 			uint64_t Now = Utils::Now();
