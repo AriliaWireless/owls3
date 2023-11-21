@@ -23,6 +23,7 @@ namespace OpenWifi {
             SimStats()->GetCurrent(id, S, UserInfo_.userinfo);
             Statuses.emplace_back(S);
         }
+
 		Poco::JSON::Array   Arr;
         for(const auto &status:Statuses) {
             Poco::JSON::Object  Obj;

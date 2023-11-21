@@ -83,9 +83,9 @@ namespace OpenWifi {
                     std::string Error;
                     simulation->Runner.Stop();
                     SimStats()->EndSim(id);
-                    OWLSObjects::SimulationStatus S;
-                    SimStats()->GetCurrent(id, S, simulation->UInfo);
 					if(Daemon()->Master()) {
+						OWLSObjects::SimulationStatus S;
+						SimStats()->GetCurrent(id, S, simulation->UInfo);
 						StorageService()->SimulationResultsDB().CreateRecord(S);
 					}
                     SimStats()->RemoveSim(id);
@@ -196,8 +196,11 @@ namespace OpenWifi {
             sim_hint->second->Runner.Stop();
             OWLSObjects::SimulationStatus S;
             SimStats()->EndSim(sim_hint->second->Runner.RunningId());
-            SimStats()->GetCurrent(sim_hint->second->Runner.RunningId(), S, sim_hint->second->UInfo);
-            StorageService()->SimulationResultsDB().CreateRecord(S);
+			if(Daemon()->Master()) {
+				SimStats()->GetCurrent(sim_hint->second->Runner.RunningId(), S,
+									   sim_hint->second->UInfo);
+				StorageService()->SimulationResultsDB().CreateRecord(S);
+			}
             SimStats()->RemoveSim(sim_hint->second->Runner.RunningId());
             Simulations_.erase(sim_hint);
             return true;

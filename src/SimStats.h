@@ -75,9 +75,15 @@ namespace OpenWifi {
             stats_hint->second[0].msgsRx++;
 		}
 
-		inline void GetCurrent(const std::string &id, OWLSObjects::SimulationStatus &ReturnedResults,
+		inline void GetCurrent(const std::string &id, OWLSObjects::SimulationStatus &Result,
                                const SecurityObjects::UserInfo & UInfo) {
+
 			std::lock_guard G(Mutex_);
+			GetCurrentNoLock(id, Result, UInfo);
+		}
+
+		inline void GetCurrentNoLock(const std::string &id, OWLSObjects::SimulationStatus &Result,
+									 const SecurityObjects::UserInfo & UInfo) {
 			auto stats_hint = Status_.find(id);
 			if (stats_hint == end(Status_)) {
 				return;
@@ -85,25 +91,30 @@ namespace OpenWifi {
 			if (UInfo.userRole == SecurityObjects::ROOT ||
 				UInfo.email == stats_hint->second[0].owner) {
 				if (Daemon()->Master()) {
-					OWLSObjects::SimulationStatus Result = stats_hint->second[0];
 					Result.liveDevices = Result.rx = Result.tx = Result.msgsRx = Result.msgsTx =
-						Result.errorDevices = Result.startTime = Result.endTime = 0;
-					Result =
-						std::accumulate(begin(stats_hint->second), end(stats_hint->second), Result,
-										[&](const OWLSObjects::SimulationStatus &A,
-											const OWLSObjects::SimulationStatus &B) {
-											OWLSObjects::SimulationStatus S;
-											S.liveDevices = A.liveDevices + B.liveDevices;
-											S.rx = A.rx + B.rx;
-											S.tx = A.tx + B.tx;
-											S.msgsRx = A.msgsRx + B.msgsRx;
-											S.msgsTx = A.msgsTx + B.msgsTx;
-											S.errorDevices = A.errorDevices + B.errorDevices;
-											return S;
-										});
-					ReturnedResults = Result;
+						Result.errorDevices = 0;
+					Result.state = stats_hint->second[0].state;
+					Result.id = stats_hint->second[0].id;
+					Result.simulationId = stats_hint->second[0].simulationId;
+					Result.startTime = stats_hint->second[0].startTime;
+					Result.endTime = stats_hint->second[0].endTime;
+					Result.owner = stats_hint->second[0].owner;
+					Result.expectedDevices = stats_hint->second[0].expectedDevices;
+					Result.timeToFullDevices = stats_hint->second[0].timeToFullDevices;
+					Result = std::accumulate(begin(stats_hint->second), end(stats_hint->second), Result,
+											 [&](const OWLSObjects::SimulationStatus &A,
+												 const OWLSObjects::SimulationStatus &B) {
+												 OWLSObjects::SimulationStatus S;
+												 S.liveDevices = A.liveDevices + B.liveDevices;
+												 S.rx = A.rx + B.rx;
+												 S.tx = A.tx + B.tx;
+												 S.msgsRx = A.msgsRx + B.msgsRx;
+												 S.msgsTx = A.msgsTx + B.msgsTx;
+												 S.errorDevices = A.errorDevices + B.errorDevices;
+												 return S;
+											 });
 				} else {
-					ReturnedResults = stats_hint->second[0];
+					Result = stats_hint->second[0];
 				}
 			}
 		}
@@ -229,10 +240,11 @@ namespace OpenWifi {
             Statuses.clear();
 
             std::lock_guard G(Mutex_);
-
             for(const auto &[id,status]:Status_) {
                 if(UInfo.userRole==SecurityObjects::ROOT || UInfo.email==status[0].owner) {
-                    Statuses.emplace_back(status[0]);
+					OWLSObjects::SimulationStatus Status;
+					GetCurrentNoLock(id, Status, UInfo);
+					Statuses.emplace_back(Status);
                 }
             }
         }
