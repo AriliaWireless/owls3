@@ -37,7 +37,8 @@ namespace OpenWifi {
 				auto masterURI = GetParameter("masterURI");
 				auto accessKey = GetParameter("accessKey");
 				auto index = GetParameter("index",0);
-				std::cout << "Starting simulation " << SimId << " on master at slot " <<  index << std::endl;
+				Logger_.information(fmt::format("Starting simulation {} from master {} index:{}, Key:{}, Offset:{}, Size:{}",
+												 joinRunningId, masterURI, index, accessKey, QB_.Offset, QB_.Limit));
 				if(QB_.Offset==0 || QB_.Limit==0 || joinRunningId.empty() || masterURI.empty() || accessKey.empty() || index==0) {
 					return BadRequest(RESTAPI::Errors::MissingOrInvalidParameters);
 				}
