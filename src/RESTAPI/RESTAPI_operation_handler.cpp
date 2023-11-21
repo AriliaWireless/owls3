@@ -21,7 +21,7 @@ namespace OpenWifi {
 		}
 
 		std::string runningId;
-		if (!HasParameter("runningId", SimId) && Op!="start") {
+		if (!HasParameter("runningId", runningId) && Op!="start") {
 			return BadRequest(RESTAPI::Errors::MissingOrInvalidParameters);
 		}
 
@@ -31,7 +31,7 @@ namespace OpenWifi {
 				if (SimulationCoordinator()->IsSimulationRunning(runningId)) {
 					return BadRequest(RESTAPI::Errors::SimulationIsAlreadyRunning);
 				}
-				SimulationCoordinator()->StartSim(SimId, runningId, Error, UserInfo_.userinfo);
+				SimulationCoordinator()->StartSim(runningId, SimId, Error, UserInfo_.userinfo);
 			} else {
 				auto joinRunningId = GetParameter("joinRunningId");
 				auto masterURI = GetParameter("masterURI");
