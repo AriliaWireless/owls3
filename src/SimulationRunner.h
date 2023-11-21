@@ -88,6 +88,10 @@ namespace OpenWifi {
         Poco::Timer         UpdateTimer_;
         std::unique_ptr<Poco::TimerCallback<SimulationRunner>> UpdateTimerCallback_;
 
+		bool StartRemoteSimulation(const Types::MicroServiceMeta &Service,
+								   const std::string &RunningId, const std::string &SimulationId,
+								   std::uint64_t Offset, std::uint64_t Limit, std::uint64_t Index );
+
 		bool UpdateMasterSimulation();
 
         static void ProgressUpdate(SimulationRunner *s);

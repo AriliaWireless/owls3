@@ -85,7 +85,7 @@ namespace OpenWifi {
 		return Poco::Net::HTTPServerResponse::HTTP_GATEWAY_TIMEOUT;
 	}
 
-	static bool StartRemoteSimulation(const Types::MicroServiceMeta &Service,
+	bool SimulationRunner::StartRemoteSimulation(const Types::MicroServiceMeta &Service,
 							   const std::string &RunningId, const std::string &SimulationId,
 							   std::uint64_t Offset, std::uint64_t Limit, std::uint64_t Index ) {
 
@@ -103,9 +103,9 @@ namespace OpenWifi {
 							  60000,
 							  ResponseObject);
 
-		std::cout << "Result: " ;
-	 	ResponseObject->stringify(std::cout);
-		std::cout << std::endl;
+		std::ostringstream os;
+	 	ResponseObject->stringify(os);
+		Logger_.information(fmt::format("Remote simulation start: {}:{}", Result, os.str()));
 
 		return Result == Poco::Net::HTTPServerResponse::HTTP_OK;
 	}
