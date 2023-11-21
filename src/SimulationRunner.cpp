@@ -129,8 +129,6 @@ namespace OpenWifi {
 										   Poco::Net::HTTPMessage::HTTP_1_1);
 
 			Request.setContentType("application/json");
-			Request.setContentLength(0);
-
 			Request.add("X-API-KEY", AccessKey_);
 			Request.add("X-INTERNAL-NAME", MicroServicePublicEndPoint());
 
