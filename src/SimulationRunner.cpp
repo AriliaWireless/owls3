@@ -112,8 +112,8 @@ namespace OpenWifi {
 	}
 
 	 bool SimulationRunner::UpdateMasterSimulation() {
-		OWLSObjects::SimulationStatus S;
-		SimStats()->GetCurrent(RunningId_, S, UInfo_);
+		OWLSObjects::SimulationStatus SimStatus;
+		SimStats()->GetCurrent(RunningId_, SimStatus, UInfo_);
 		std::uint64_t 	TimeOut=60000;
 		std::cout << "UpdateMasterSimulation:" 	<< Index_ << std::endl;
 		try {
@@ -131,14 +131,18 @@ namespace OpenWifi {
 			Request.setContentType("application/json");
 			Request.add("X-API-KEY", AccessKey_);
 			Request.add("X-INTERNAL-NAME", MicroServicePublicEndPoint());
+			Poco::JSON::Object BodyObject;
+			SimStatus.to_json(BodyObject);
+			std::stringstream os;
+			BodyObject.stringify(os);
+			Request.setContentLength(os.str().length());
 
 			if (Secure) {
+
 				Poco::Net::HTTPSClientSession Session(URI.getHost(), URI.getPort());
 				Session.setTimeout(Poco::Timespan(TimeOut / 1000, TimeOut % 1000));
 				auto &Body = Session.sendRequest(Request);
-				Poco::JSON::Object BodyObject;
-				S.to_json(BodyObject);
-				Poco::JSON::Stringifier::stringify(S, Body);
+				Poco::StreamCopier::copyStream(os, Body);
 
 				Poco::Net::HTTPResponse Response;
 				std::istream &is = Session.receiveResponse(Response);
@@ -170,8 +174,6 @@ namespace OpenWifi {
 			Poco::Logger::get("REST-CALLER-POST").log(E);
 		}
 		return Poco::Net::HTTPServerResponse::HTTP_GATEWAY_TIMEOUT;
-
-		return true;
 	}
 
 	void SimulationRunner::Start() {
