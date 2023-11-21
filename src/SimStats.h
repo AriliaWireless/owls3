@@ -83,29 +83,26 @@ namespace OpenWifi {
             if(stats_hint==end(Status_)) {
                 return;
             }
-            if(UInfo.userRole==SecurityObjects::ROOT || UInfo.email==stats_hint->second[0].owner)
-                S = stats_hint->second[0];
-		}
-
-		inline void GetReportableStats(const std::string &id, OWLSObjects::SimulationStatus &S,
-									   const SecurityObjects::UserInfo & UInfo) {
-			std::lock_guard G(Mutex_);
-			auto stats_hint = Status_.find(id);
-			if(stats_hint==end(Status_)) {
-				return;
-			}
-			if(UInfo.userRole==SecurityObjects::ROOT || UInfo.email==stats_hint->second[0].owner) {
-				std::accumulate(begin(stats_hint->second), end(stats_hint->second), S,
-								[]([[maybe_unused]] const OWLSObjects::SimulationStatus &A, const OWLSObjects::SimulationStatus &B) {
-									OWLSObjects::SimulationStatus S;
-									S.liveDevices += B.liveDevices;
-									S.rx += B.rx;
-									S.tx += B.tx;
-									S.msgsRx += B.msgsRx;
-									S.msgsTx += B.msgsTx;
-									S.errorDevices += B.errorDevices;
-									return S;
-								});
+			if(Daemon()->Master()) {
+				if (UInfo.userRole == SecurityObjects::ROOT ||
+					UInfo.email == stats_hint->second[0].owner) {
+					OWLSObjects::SimulationStatus Result =
+					std::accumulate(begin(stats_hint->second), end(stats_hint->second), stats_hint->second[0],
+									[&]([[maybe_unused]] const OWLSObjects::SimulationStatus &A,
+									   const OWLSObjects::SimulationStatus &B) {
+										OWLSObjects::SimulationStatus S;
+										S.liveDevices = A.liveDevices +B.liveDevices;
+										S.rx = A.rx + B.rx;
+										S.tx = A.tx + B.tx;
+										S.msgsRx = A.msgsRx + B.msgsRx;
+										S.msgsTx = A.msgsTx +B.msgsTx;
+										S.errorDevices = A.errorDevices + B.errorDevices;
+										return S;
+									});
+					S = Result;
+				}
+			} else {
+				S = stats_hint->second[0];
 			}
 		}
 
@@ -113,7 +110,7 @@ namespace OpenWifi {
 			return 0;
 		}
 
-		inline void Stop() {
+		inline void Stop() final {
 
         }
 
@@ -203,7 +200,7 @@ namespace OpenWifi {
             return stats_hint->second[0].startTime;
         }
 
-		[[nodiscard]] inline uint64_t GetLiveDevices(const std::string &id) {
+/*		[[nodiscard]] inline uint64_t GetLiveDevices(const std::string &id) {
             std::lock_guard G(Mutex_);
             auto stats_hint = Status_.find(id);
             if(stats_hint==end(Status_)) {
@@ -211,7 +208,7 @@ namespace OpenWifi {
             }
             return stats_hint->second[0].liveDevices;
         }
-
+*/
 		inline void UpdateRemoteStatus(const OWLSObjects::SimulationStatus &SimStatus, std::uint64_t Index) {
 			std::lock_guard G(Mutex_);
 			auto stats_hint = Status_.find(SimStatus.id);

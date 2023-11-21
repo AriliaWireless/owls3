@@ -47,17 +47,17 @@ namespace OpenWifi::OWLSObjects {
         std::string id;
         std::string simulationId;
         std::string state;
-        uint64_t tx;
-        uint64_t rx;
-        uint64_t msgsTx;
-        uint64_t msgsRx;
-        uint64_t liveDevices;
-        uint64_t timeToFullDevices;
-        uint64_t startTime;
-        uint64_t endTime;
-        uint64_t errorDevices;
-        std::string owner;
-        uint64_t expectedDevices;
+		std::string owner;
+        uint64_t tx=0;
+        uint64_t rx=0;
+        uint64_t msgsTx=0;
+        uint64_t msgsRx=0;
+        uint64_t liveDevices=0;
+        uint64_t timeToFullDevices=0;
+        uint64_t startTime=0;
+        uint64_t endTime=0;
+        uint64_t errorDevices=0;
+        uint64_t expectedDevices=0;
 
         void to_json(Poco::JSON::Object &Obj) const;
 		bool from_json(const Poco::JSON::Object::Ptr &Obj);
