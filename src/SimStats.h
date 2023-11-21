@@ -103,7 +103,7 @@ namespace OpenWifi {
 					ReturnedResults = Result;
 				}
 			} else {
-				S = stats_hint->second[0];
+				ReturnedResults = stats_hint->second[0];
 			}
 		}
 
