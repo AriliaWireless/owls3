@@ -33,4 +33,24 @@ namespace OpenWifi {
         Arr.stringify(os);
         ReturnRawJSON(os.str());
 	}
+
+	void RESTAPI_status_handler::DoPut() {
+		auto id = GetBinding("id","");
+		if (id.empty()) {
+			return BadRequest(RESTAPI::Errors::MissingOrInvalidParameters);
+		}
+		auto index = GetParameter("index",0);
+		if(index==0) {
+			return BadRequest(RESTAPI::Errors::MissingOrInvalidParameters);
+		}
+
+		OWLSObjects::SimulationStatus SimStatus;
+		if(!SimStatus.from_json(ParsedBody_)) {
+			return BadRequest(RESTAPI::Errors::InvalidJSONDocument);
+		}
+		Logger_.information(fmt::format("Updating status for simulation {} index {}", id, index));
+		SimStats()->UpdateRemoteStatus(SimStatus, index);
+		return OK();
+	}
+
 } // namespace OpenWifi

@@ -95,6 +95,28 @@ namespace OpenWifi::OWLSObjects {
         field_to_json(Obj, "expectedDevices", expectedDevices);
     }
 
+	bool SimulationStatus::from_json(const Poco::JSON::Object::Ptr &Obj) {
+		try {
+			field_from_json(Obj, "id", id);
+			field_from_json(Obj, "simulationId", simulationId);
+			field_from_json(Obj, "state", state);
+			field_from_json(Obj, "tx", tx);
+			field_from_json(Obj, "rx", rx);
+			field_from_json(Obj, "msgsTx", msgsTx);
+			field_from_json(Obj, "msgsRx", msgsRx);
+			field_from_json(Obj, "liveDevices", liveDevices);
+			field_from_json(Obj, "timeToFullDevices", timeToFullDevices);
+			field_from_json(Obj, "startTime", startTime);
+			field_from_json(Obj, "endTime", endTime);
+			field_from_json(Obj, "errorDevices", errorDevices);
+			field_from_json(Obj, "owner", owner);
+			field_from_json(Obj, "expectedDevices", expectedDevices);
+			return true;
+		} catch (...) {
+		}
+		return false;
+	}
+
 	void Dashboard::to_json([[maybe_unused]] Poco::JSON::Object &Obj) const {}
 
 	bool Dashboard::from_json([[maybe_unused]] const Poco::JSON::Object::Ptr &Obj) { return true; }

@@ -169,6 +169,14 @@ namespace OpenWifi {
             return stats_hint->second.liveDevices;
         }
 
+		inline void UpdateRemoteStatus(const OWLSObjects::SimulationStatus &SimStatus, std::uint64_t Index) {
+			std::lock_guard G(Mutex_);
+			auto stats_hint = Status_.find(SimStatus.id);
+			if (stats_hint == end(Status_)) {
+				return;
+			}
+		}
+
         inline void GetAllSimulations(std::vector<OWLSObjects::SimulationStatus> & Statuses, const SecurityObjects::UserInfo & UInfo) {
             Statuses.clear();
 

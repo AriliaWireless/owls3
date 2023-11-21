@@ -120,7 +120,7 @@ namespace OpenWifi {
 			Poco::URI URI(MasterURI_);
 			Poco::JSON::Object::Ptr ResponseObject;
 			auto Secure = (URI.getScheme() == "https");
-
+			URI.addQueryParameter("index", std::to_string(Index_));
 			URI.setPath(fmt::format("/api/v1/status/{}", RunningId_));
 
 			std::string Path(URI.getPathAndQuery());

@@ -60,6 +60,7 @@ namespace OpenWifi::OWLSObjects {
         uint64_t expectedDevices;
 
         void to_json(Poco::JSON::Object &Obj) const;
+		bool from_json(const Poco::JSON::Object::Ptr &Obj);
     };
 
 	struct Dashboard {
