@@ -25,14 +25,13 @@ namespace OpenWifi {
             }
 
             stats_hint->second[0].liveDevices++;
-
 			if(Daemon()->Master()) {
 				std::uint64_t devices_now=0;
 				std::for_each(begin(stats_hint->second), end(stats_hint->second), [&devices_now](const OWLSObjects::SimulationStatus &S) {
 					devices_now += S.liveDevices;
 				});
 				if ((stats_hint->second[0].timeToFullDevices == 0) &&
-					(stats_hint->second[0].liveDevices == devices_now)) {
+					(stats_hint->second[0].expectedDevices == devices_now)) {
 					uint64_t Now = Utils::Now();
 					stats_hint->second[0].timeToFullDevices = Now - stats_hint->second[0].startTime;
 				}
@@ -76,7 +75,7 @@ namespace OpenWifi {
             stats_hint->second[0].msgsRx++;
 		}
 
-		inline void GetCurrent(const std::string &id, OWLSObjects::SimulationStatus &S,
+		inline void GetCurrent(const std::string &id, OWLSObjects::SimulationStatus &ReturnedResults,
                                const SecurityObjects::UserInfo & UInfo) {
 			std::lock_guard G(Mutex_);
             auto stats_hint = Status_.find(id);
@@ -86,9 +85,11 @@ namespace OpenWifi {
 			if(Daemon()->Master()) {
 				if (UInfo.userRole == SecurityObjects::ROOT ||
 					UInfo.email == stats_hint->second[0].owner) {
-					OWLSObjects::SimulationStatus Result =
-					std::accumulate(begin(stats_hint->second), end(stats_hint->second), stats_hint->second[0],
-									[&]([[maybe_unused]] const OWLSObjects::SimulationStatus &A,
+					OWLSObjects::SimulationStatus Result = stats_hint->second[0];
+					Result.liveDevices = Result.rx = Result.tx = Result.msgsRx = Result.msgsTx =
+					Result.errorDevices = Result.startTime = Result.endTime = 0;
+					std::accumulate(begin(stats_hint->second), end(stats_hint->second), Result,
+									[]([[maybe_unused]] const OWLSObjects::SimulationStatus &A,
 									   const OWLSObjects::SimulationStatus &B) {
 										OWLSObjects::SimulationStatus S;
 										S.liveDevices = A.liveDevices +B.liveDevices;
@@ -99,7 +100,7 @@ namespace OpenWifi {
 										S.errorDevices = A.errorDevices + B.errorDevices;
 										return S;
 									});
-					S = Result;
+					ReturnedResults = Result;
 				}
 			} else {
 				S = stats_hint->second[0];
