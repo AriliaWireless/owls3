@@ -52,6 +52,7 @@ namespace OpenWifi {
 
 	void SimulationCoordinator::run() {
 		Running_ = true;
+		std::uint64_t LastLog=0;
 		while (Running_) {
 
 			Poco::Thread::trySleep(2000);
@@ -78,7 +79,7 @@ namespace OpenWifi {
                 const auto &simulation = it->second;
                 if (simulation->Details.simulationLength != 0 &&
                     (Now - SimStats()->GetStartTime(id)) > simulation->Details.simulationLength) {
-                    poco_information(Logger(),fmt::format("Simulation'{}' ({}) just completed.", simulation->Details.name,
+                    poco_information(Logger(),fmt::format("Simulation'{}' ({}) completed.", simulation->Details.name,
                                                           simulation->Runner.RunningId()));
                     std::string Error;
                     simulation->Runner.Stop();
@@ -91,8 +92,11 @@ namespace OpenWifi {
                     SimStats()->RemoveSim(id);
                     it = Simulations_.erase(it);
                 } else {
-                    poco_information(Logger(),fmt::format("Simulation'{}' ({}) still running.", simulation->Details.name,
-                                                          simulation->Runner.RunningId()));
+					if((Utils::Now()-LastLog)>30) {
+						poco_information(Logger(), fmt::format("Simulation'{}' ({}) is running.",															   simulation->Details.name,
+										   simulation->Runner.RunningId()));
+						LastLog = Utils::Now();
+					}
                     ++it;
                 }
             }

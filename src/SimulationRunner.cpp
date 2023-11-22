@@ -251,8 +251,8 @@ namespace OpenWifi {
 
         UpdateTimerCallback_ = std::make_unique<Poco::TimerCallback<SimulationRunner>>(
                 *this, &SimulationRunner::onUpdateTimer);
-        UpdateTimer_.setStartInterval(10000);
-        UpdateTimer_.setPeriodicInterval(2 * 1000);
+        UpdateTimer_.setStartInterval(5000);
+        UpdateTimer_.setPeriodicInterval(3 * 1000);
         UpdateTimer_.start(*UpdateTimerCallback_, MicroServiceTimerPool());
 
 		Logger_.information(fmt::format("Simulation {} running", RunningId_));
