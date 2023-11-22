@@ -49,7 +49,7 @@ namespace OpenWifi {
 		if(!SimStatus.from_json(ParsedBody_)) {
 			return BadRequest(RESTAPI::Errors::InvalidJSONDocument);
 		}
-		Logger_.information(fmt::format("Updating status for simulation {} index {}", id, index));
+		Logger_.debug(fmt::format("Updating status for simulation {} index {}", id, index));
 		SimStats()->UpdateRemoteStatus(SimStatus, index);
 		return OK();
 	}
