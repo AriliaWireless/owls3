@@ -50,7 +50,7 @@ namespace OpenWifi {
             !GooDeviceType(ExistingSimulation.deviceType)   ||
             ExistingSimulation.maxClients < ExistingSimulation.minClients ||
             ExistingSimulation.maxAssociations < ExistingSimulation.minAssociations ||
-            ExistingSimulation.devices <1 || ExistingSimulation.devices>50000    ||
+            ExistingSimulation.devices <1 || ExistingSimulation.devices>1000000    ||
             ExistingSimulation.healthCheckInterval < 30 || ExistingSimulation.healthCheckInterval >600 ||
             ExistingSimulation.stateInterval < 30 || ExistingSimulation.healthCheckInterval>600 ||
             ExistingSimulation.minAssociations > 4 ||

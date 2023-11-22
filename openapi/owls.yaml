@@ -303,7 +303,7 @@ components:
           type: integer
           minimum: 5
           default: 10
-          maximum: 50000
+          maximum: 1000000
         healthCheckInterval:
           type: integer
           minimum: 30
