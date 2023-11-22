@@ -131,6 +131,7 @@ add_executable( owls
         src/RESTAPI/RESTAPI_owlsSystemConfiguration.h
         src/SockUtils.cpp
         src/SockUtils.h
+        src/sdk_utils.h
 )
 
 target_link_libraries(owls PRIVATE

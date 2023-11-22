@@ -13,7 +13,7 @@
 #include "SimStats.h"
 #include "StorageService.h"
 #include "Daemon.h"
-
+#include "sdk_utils.h"
 
 namespace OpenWifi {
 
@@ -238,11 +238,73 @@ namespace OpenWifi {
 	}
 
 	void SimulationCoordinator::CancelRemoteSimulation(const std::string &id) {
+		try {
+			std::lock_guard	G(Mutex_);
 
+			OWLSObjects::SimulationStatus S;
+			SimStats()->GetCurrent(id, S, Simulations_[id]->UInfo);
+
+			for(const auto &service:Services_) {
+				Poco::JSON::Object::Ptr ResponseObject;
+				Poco::URI   URI(service.PublicEndPoint);
+				URI.setPath(fmt::format("/api/v1/operation/{}", S.id));
+
+				auto Result = PostAPI(service,
+									  {
+										  { "operation", "cancel" },
+										  { "runningId", S.id }
+									  },
+									  fmt::format("/api/v1/operation/{}", S.simulationId),
+									  60000,
+									  ResponseObject);
+
+				std::ostringstream os;
+				ResponseObject->stringify(os);
+				Logger().information(fmt::format("Remote simulation cancellation: {} {}:{} Result: {} Response:{}",
+						 service.PrivateEndPoint, id, S.simulationId,  Result,  os.str()));
+			}
+		} catch(const Poco::Exception &E) {
+			Logger().log(E);
+		} catch(const std::exception &E) {
+			Logger().warning(fmt::format("Exception: {}", E.what()));
+		} catch(...) {
+			Logger().warning("Unknown exception");
+		}
 	}
 
 	void SimulationCoordinator::StopRemoteSimulation(const std::string &id) {
+		try {
+			std::lock_guard	G(Mutex_);
 
+			OWLSObjects::SimulationStatus S;
+			SimStats()->GetCurrent(id, S, Simulations_[id]->UInfo);
+
+			for(const auto &service:Services_) {
+				Poco::JSON::Object::Ptr ResponseObject;
+				Poco::URI   URI(service.PublicEndPoint);
+				URI.setPath(fmt::format("/api/v1/operation/{}", S.id));
+
+				auto Result = PostAPI(service,
+									  {
+										  { "operation", "stop" },
+										  { "runningId", S.id }
+									  },
+									  fmt::format("/api/v1/operation/{}", S.simulationId),
+									  60000,
+									  ResponseObject);
+
+				std::ostringstream os;
+				ResponseObject->stringify(os);
+				Logger().information(fmt::format("Remote simulation stopped: {} {}:{} Result: {} Response:{}",
+												 service.PrivateEndPoint, id, S.simulationId,  Result, os.str()));
+			}
+		} catch(const Poco::Exception &E) {
+			Logger().log(E);
+		} catch(const std::exception &E) {
+			Logger().warning(fmt::format("Exception: {}", E.what()));
+		} catch(...) {
+			Logger().warning("Unknown exception");
+		}
 	}
 
     static const std::string DefaultConfigurationStr = R"~~~(
