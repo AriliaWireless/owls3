@@ -23,8 +23,16 @@ namespace OpenWifi {
             if(stats_hint==end(Statuses_)) {
                 return;
             }
+			stats_hint->second[0].liveDevices++;
+			UpdateConnections(id);
+		}
 
-            stats_hint->second[0].liveDevices++;
+		inline void UpdateConnections(const std::string &id) {
+			auto stats_hint = Statuses_.find(id);
+			if(stats_hint==end(Statuses_)) {
+				return;
+			}
+
 			if(Daemon()->Master()) {
 				std::uint64_t devices_now=0;
 				std::for_each(begin(stats_hint->second), end(stats_hint->second), [&devices_now](const OWLSObjects::SimulationStatus &S) {
@@ -231,6 +239,7 @@ namespace OpenWifi {
 
 			if(Index<stats_hint->second.size()) {
 				stats_hint->second[Index] = SimStatus;
+				UpdateConnections(SimStatus.id);
 			} else {
 				Logger().warning(fmt::format("Invalid index {} for simulation {} size {}", Index, SimStatus.id, stats_hint->second.size()));
 			}
