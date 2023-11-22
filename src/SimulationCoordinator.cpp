@@ -207,6 +207,8 @@ namespace OpenWifi {
 			}
             SimStats()->RemoveSim(sim_hint->second->Runner.RunningId());
             Simulations_.erase(sim_hint);
+
+			StopRemoteSimulation(Id);
             return true;
         }
         Error = RESTAPI::Errors::ACCESS_DENIED;
@@ -228,10 +230,19 @@ namespace OpenWifi {
             SimStats()->RemoveSim(sim_hint->second->Runner.RunningId());
             Simulations_.erase(sim_hint);
 			LookForServices_ = true;
+			CancelRemoteSimulation(Id);
             return true;
         }
         Error = RESTAPI::Errors::ACCESS_DENIED;
         return false;
+	}
+
+	void SimulationCoordinator::CancelRemoteSimulation(const std::string &id) {
+
+	}
+
+	void SimulationCoordinator::StopRemoteSimulation(const std::string &id) {
+
 	}
 
     static const std::string DefaultConfigurationStr = R"~~~(

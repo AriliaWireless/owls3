@@ -80,6 +80,9 @@ namespace OpenWifi {
         bool IsSimulationRunning(const std::string &id);
 		const auto & Services() const { return Services_; }
 
+		void CancelRemoteSimulation(const std::string &id);
+		void StopRemoteSimulation(const std::string &id);
+
 	  private:
 		Poco::Thread Worker_;
 		std::atomic_bool Running_ = false;
