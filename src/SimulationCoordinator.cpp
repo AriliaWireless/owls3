@@ -243,8 +243,6 @@ namespace OpenWifi {
 
 	void SimulationCoordinator::CancelRemoteSimulation(const std::string &id) {
 		try {
-			std::lock_guard	G(Mutex_);
-
 			OWLSObjects::SimulationStatus S;
 			SimStats()->GetCurrent(id, S, Simulations_[id]->UInfo);
 
@@ -278,8 +276,6 @@ namespace OpenWifi {
 
 	void SimulationCoordinator::StopRemoteSimulation(const std::string &id) {
 		try {
-			std::lock_guard	G(Mutex_);
-
 			OWLSObjects::SimulationStatus S;
 			SimStats()->GetCurrent(id, S, Simulations_[id]->UInfo);
 

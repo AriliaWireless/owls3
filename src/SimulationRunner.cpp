@@ -54,7 +54,6 @@ namespace OpenWifi {
 		OWLSObjects::SimulationStatus SimStatus;
 		SimStats()->GetCurrent(RunningId_, SimStatus, UInfo_);
 		std::uint64_t 	TimeOut=60000;
-		std::cout << "UpdateMasterSimulation:" 	<< Index_ << std::endl;
 		try {
 			Poco::URI URI(MasterURI_);
 			Poco::JSON::Object::Ptr ResponseObject;
