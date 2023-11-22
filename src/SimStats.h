@@ -94,14 +94,6 @@ namespace OpenWifi {
 				if (Daemon()->Master()) {
 					Result.liveDevices = Result.rx = Result.tx = Result.msgsRx = Result.msgsTx =
 						Result.errorDevices = 0;
-					Result.state = stats_hint->second[0].state;
-					Result.id = stats_hint->second[0].id;
-					Result.simulationId = stats_hint->second[0].simulationId;
-					Result.startTime = stats_hint->second[0].startTime;
-					Result.endTime = stats_hint->second[0].endTime;
-					Result.owner = stats_hint->second[0].owner;
-					Result.expectedDevices = stats_hint->second[0].expectedDevices;
-					Result.timeToFullDevices = stats_hint->second[0].timeToFullDevices;
 					Result = std::accumulate(begin(stats_hint->second), end(stats_hint->second), Result,
 											 [&](const OWLSObjects::SimulationStatus &A,
 												 const OWLSObjects::SimulationStatus &B) {
@@ -114,6 +106,14 @@ namespace OpenWifi {
 												 S.errorDevices = A.errorDevices + B.errorDevices;
 												 return S;
 											 });
+					Result.state = stats_hint->second[0].state;
+					Result.id = stats_hint->second[0].id;
+					Result.simulationId = stats_hint->second[0].simulationId;
+					Result.startTime = stats_hint->second[0].startTime;
+					Result.endTime = stats_hint->second[0].endTime;
+					Result.owner = stats_hint->second[0].owner;
+					Result.expectedDevices = stats_hint->second[0].expectedDevices;
+					Result.timeToFullDevices = stats_hint->second[0].timeToFullDevices;
 				} else {
 					Result = stats_hint->second[0];
 				}
