@@ -204,13 +204,11 @@ namespace OpenWifi {
 				SimStats()->GetCurrent(sim_hint->second->Runner.RunningId(), S,
 									   sim_hint->second->UInfo);
 				StorageService()->SimulationResultsDB().CreateRecord(S);
+				StopRemoteSimulation(Id);
 			}
             SimStats()->RemoveSim(sim_hint->second->Runner.RunningId());
             Simulations_.erase(sim_hint);
 
-			if(Daemon()->Master()) {
-				StopRemoteSimulation(Id);
-			}
             return true;
         }
         Error = RESTAPI::Errors::ACCESS_DENIED;
@@ -229,12 +227,12 @@ namespace OpenWifi {
         if(UInfo.userRole==SecurityObjects::ROOT || UInfo.email==sim_hint->second->UInfo.email) {
             sim_hint->second->Runner.Stop();
             SimStats()->SetState(sim_hint->second->Runner.RunningId(), "none");
-            SimStats()->RemoveSim(sim_hint->second->Runner.RunningId());
-            Simulations_.erase(sim_hint);
-			LookForServices_ = true;
 			if(Daemon()->Master()) {
 				CancelRemoteSimulation(Id);
 			}
+            SimStats()->RemoveSim(sim_hint->second->Runner.RunningId());
+            Simulations_.erase(sim_hint);
+			LookForServices_ = true;
             return true;
         }
         Error = RESTAPI::Errors::ACCESS_DENIED;
@@ -281,9 +279,6 @@ namespace OpenWifi {
 
 			for(const auto &service:Services_) {
 				Poco::JSON::Object::Ptr ResponseObject;
-				Poco::URI   URI(service.PublicEndPoint);
-				URI.setPath(fmt::format("/api/v1/operation/{}", S.id));
-
 				auto Result = PostAPI(service,
 									  {
 										  { "operation", "stop" },
