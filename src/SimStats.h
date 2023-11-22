@@ -19,8 +19,8 @@ namespace OpenWifi {
 		inline void Connect(const std::string &id) {
 			std::lock_guard G(Mutex_);
 
-            auto stats_hint = Status_.find(id);
-            if(stats_hint==end(Status_)) {
+            auto stats_hint = Statuses_.find(id);
+            if(stats_hint==end(Statuses_)) {
                 return;
             }
 
@@ -41,8 +41,8 @@ namespace OpenWifi {
 		inline void Disconnect(const std::string &id) {
             std::lock_guard G(Mutex_);
 
-            auto stats_hint = Status_.find(id);
-            if(stats_hint==end(Status_)) {
+            auto stats_hint = Statuses_.find(id);
+            if(stats_hint==end(Statuses_)) {
                 return;
             }
 
@@ -57,8 +57,8 @@ namespace OpenWifi {
 
 		inline void AddOutMsg(const std::string &id, int64_t N) {
             std::lock_guard G(Mutex_);
-            auto stats_hint = Status_.find(id);
-            if(stats_hint==end(Status_)) {
+            auto stats_hint = Statuses_.find(id);
+            if(stats_hint==end(Statuses_)) {
                 return;
             }
             stats_hint->second[0].msgsTx++;
@@ -67,8 +67,8 @@ namespace OpenWifi {
 
 		inline void AddInMsg(const std::string &id, int64_t N) {
             std::lock_guard G(Mutex_);
-            auto stats_hint = Status_.find(id);
-            if(stats_hint==end(Status_)) {
+            auto stats_hint = Statuses_.find(id);
+            if(stats_hint==end(Statuses_)) {
                 return;
             }
             stats_hint->second[0].rx += N;
@@ -84,8 +84,9 @@ namespace OpenWifi {
 
 		inline void GetCurrentNoLock(const std::string &id, OWLSObjects::SimulationStatus &Result,
 									 const SecurityObjects::UserInfo & UInfo) {
-			auto stats_hint = Status_.find(id);
-			if (stats_hint == end(Status_)) {
+			
+			auto stats_hint = Statuses_.find(id);
+			if (stats_hint == end(Statuses_)) {
 				return;
 			}
 			if (UInfo.userRole == SecurityObjects::ROOT ||
@@ -131,7 +132,7 @@ namespace OpenWifi {
                              const SecurityObjects::UserInfo & UInfo) {
 			std::lock_guard G(Mutex_);
 
-			auto & CurrentStatus = Status_[id];
+			auto & CurrentStatus = Statuses_[id];
 
 			OWLSObjects::SimulationStatus S;
 			S.expectedDevices = SimDetails.devices;
@@ -143,20 +144,19 @@ namespace OpenWifi {
 			S.startTime = Utils::Now();
 			S.owner = UInfo.email;
 
-			if(!Daemon()->Master()) {
-				CurrentStatus.emplace_back(S);
-			} else {
+			if(Daemon()->Master()) {
 				for(std::uint64_t i=0;i<SimulationCoordinator()->Services().size()+1;++i) {
 					CurrentStatus.emplace_back(S);
 				}
+			} else {
+				CurrentStatus.emplace_back(S);
 			}
-
 		}
 
 		inline void EndSim(const std::string &id) {
             std::lock_guard G(Mutex_);
-            auto stats_hint = Status_.find(id);
-            if(stats_hint==end(Status_)) {
+            auto stats_hint = Statuses_.find(id);
+            if(stats_hint==end(Statuses_)) {
                 return;
             }
 			stats_hint->second[0].state = "completed";
@@ -165,13 +165,13 @@ namespace OpenWifi {
 
         inline void RemoveSim(const std::string &id) {
             std::lock_guard G(Mutex_);
-            Status_.erase(id);
+            Statuses_.erase(id);
         }
 
 		inline void SetState(const std::string &id, const std::string &S) {
             std::lock_guard G(Mutex_);
-            auto stats_hint = Status_.find(id);
-            if(stats_hint==end(Status_)) {
+            auto stats_hint = Statuses_.find(id);
+            if(stats_hint==end(Statuses_)) {
                 return;
             }
             stats_hint->second[0].state = S;
@@ -179,8 +179,8 @@ namespace OpenWifi {
 
 		[[nodiscard]] inline std::string GetState(const std::string &id) {
             std::lock_guard G(Mutex_);
-            auto stats_hint = Status_.find(id);
-            if(stats_hint==end(Status_)) {
+            auto stats_hint = Statuses_.find(id);
+            if(stats_hint==end(Statuses_)) {
                 return "";
             }
 			return stats_hint->second[0].state;
@@ -188,8 +188,8 @@ namespace OpenWifi {
 
 		inline void Reset(const std::string &id) {
             std::lock_guard G(Mutex_);
-            auto stats_hint = Status_.find(id);
-            if(stats_hint==end(Status_)) {
+            auto stats_hint = Statuses_.find(id);
+            if(stats_hint==end(Statuses_)) {
                 return;
             }
 
@@ -206,8 +206,8 @@ namespace OpenWifi {
 
 		[[nodiscard]] inline uint64_t GetStartTime(const std::string &id) {
             std::lock_guard G(Mutex_);
-            auto stats_hint = Status_.find(id);
-            if(stats_hint==end(Status_)) {
+            auto stats_hint = Statuses_.find(id);
+            if(stats_hint==end(Statuses_)) {
                 return 0;
             }
             return stats_hint->second[0].startTime;
@@ -215,8 +215,8 @@ namespace OpenWifi {
 
 /*		[[nodiscard]] inline uint64_t GetLiveDevices(const std::string &id) {
             std::lock_guard G(Mutex_);
-            auto stats_hint = Status_.find(id);
-            if(stats_hint==end(Status_)) {
+            auto stats_hint = Statuses_.find(id);
+            if(stats_hint==end(Statuses_)) {
                 return 0;
             }
             return stats_hint->second[0].liveDevices;
@@ -224,8 +224,8 @@ namespace OpenWifi {
 */
 		inline void UpdateRemoteStatus(const OWLSObjects::SimulationStatus &SimStatus, std::uint64_t Index) {
 			std::lock_guard G(Mutex_);
-			auto stats_hint = Status_.find(SimStatus.id);
-			if (stats_hint == end(Status_)) {
+			auto stats_hint = Statuses_.find(SimStatus.id);
+			if (stats_hint == end(Statuses_)) {
 				return;
 			}
 
@@ -238,20 +238,18 @@ namespace OpenWifi {
 
         inline void GetAllSimulations(std::vector<OWLSObjects::SimulationStatus> & Statuses, const SecurityObjects::UserInfo & UInfo) {
             Statuses.clear();
-
             std::lock_guard G(Mutex_);
-            for(const auto &[id,status]:Status_) {
+            for(const auto &[id,status]:Statuses_) {
                 if(UInfo.userRole==SecurityObjects::ROOT || UInfo.email==status[0].owner) {
-					OWLSObjects::SimulationStatus Status;
-					GetCurrentNoLock(id, Status, UInfo);
-					Statuses.emplace_back(Status);
+					OWLSObjects::SimulationStatus SimStatus;
+					GetCurrentNoLock(id, SimStatus, UInfo);
+					Statuses.emplace_back(SimStatus);
                 }
             }
         }
 
 	  private:
-        std::map<std::string,std::vector<OWLSObjects::SimulationStatus>>     Status_;
-
+        std::map<std::string,std::vector<OWLSObjects::SimulationStatus>>     Statuses_;
 		SimStats() noexcept : SubSystemServer("SimStats", "SIM-STATS", "stats") {}
 	};
 
